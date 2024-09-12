@@ -56,8 +56,10 @@ class Telegram {
         const clientName = from.username || new Date().getTime().toString()
         const { file, qr } = await newClient(clientName)
 
-        this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})
-        this.bot.sendDocument(chat.id, file, {}, {filename: `fidar-vpn-${clientName}`})
+        await this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})
+        await this.bot.sendDocument(chat.id, file, {}, {filename: `fidar-vpn-${clientName}`})
+
+        await new Promise(resolve => setTimeout(resolve, 1000))
 
         this.sendDoneMessage(chat)
     } catch (error: any) {

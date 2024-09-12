@@ -13,7 +13,7 @@ const profilePath = `/etc/wireguard/${wgParams.SERVER_WG_NIC}.conf`
 const exec = async (command: string) => {
   try {
     const { stdout, stderr } = await execute(command)
-    if (stderr) console.info(stderr)
+    //if (stderr) console.info(stderr)
 
     return stdout
   } catch (e) {
