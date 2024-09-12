@@ -94,6 +94,7 @@ export const newClient = async (name: string) => {
 
   const serverConf = generateServerConf(name, clientPublicKey, clientPresharedKey, ipV4, ipV6)
 
+  console.log(111, `echo "${serverConf}" >> ${profilePath}`)
   await exec(`echo "${serverConf}" >> ${profilePath}`)
 
   // await exec(`wg syncconf ${wgParams.SERVER_WG_NIC} <(wg-quick strip ${wgParams.SERVER_WG_NIC})`)
