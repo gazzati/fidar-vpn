@@ -62,8 +62,8 @@ class Telegram {
   }
 
   private async vpn(chat: Chat) {
-    newClient('test1')
-    this.sendMessage(chat, "VPN")
+    const qr = await newClient('test2')
+    this.sendMessage(chat, qr || 'vpn')
   }
 
   private log(from: User, message: string) {

@@ -54,16 +54,7 @@ const getIpV6 = async (dotIp: string) => {
 }
 
 const generateClientConf = (clientPrivateKey: string, clientPresharedKey: string, ipV4: string, ipV6: string) => {
-  return `[Interface]
-PrivateKey = ${clientPrivateKey}
-Address = ${ipV4}/32,${ipV6}/128
-DNS = ${wgParams.CLIENT_DNS_1},${wgParams.CLIENT_DNS_2}
-
-[Peer]
-PublicKey = ${wgParams.SERVER_PUB_KEY}
-PresharedKey = ${clientPresharedKey}
-Endpoint = ${wgParams.SERVER_PUB_IP}:${wgParams.SERVER_PORT}
-AllowedIPs = ${wgParams.ALLOWED_IPS}`
+  return `[Interface]\nPrivateKey = ${clientPrivateKey}\nAddress = ${ipV4}/32,${ipV6}/128\nDNS = ${wgParams.CLIENT_DNS_1},${wgParams.CLIENT_DNS_2}\n\n[Peer]\nPublicKey = ${wgParams.SERVER_PUB_KEY}\nPresharedKey = ${clientPresharedKey}\nEndpoint = ${wgParams.SERVER_PUB_IP}:${wgParams.SERVER_PORT}\nAllowedIPs = ${wgParams.ALLOWED_IPS}`
 }
 
 const generateServerConf = (name: string, clientPublicKey: string, clientPresharedKey: string, ipV4: string, ipV6: string) => {
@@ -108,4 +99,6 @@ export const newClient = async (name: string) => {
   const qr = await exec(`qrencode -t ansiutf8 < ${clientConfPath}`)
 
   console.log(qr)
+
+  return qr
 }
