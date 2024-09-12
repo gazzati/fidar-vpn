@@ -66,8 +66,8 @@ class Telegram {
         const clientName = new Date().getTime().toString()
         const { file, qr } = await newClient(clientName)
 
-        this.bot.sendPhoto(chat.id, qr)
-        this.bot.sendDocument(chat.id, file)
+        this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})
+        this.bot.sendDocument(chat.id, file, {}, {filename: `fidar-vpn-${clientName}`})
 
         this.bot.sendMessage(chat.id, "✅ Готово, отсканируй QR код с конфигурацией или используй файл с конфигурацией")
     } catch (e) {
