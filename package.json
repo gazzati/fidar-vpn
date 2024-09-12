@@ -26,7 +26,6 @@
   "dependencies": {
     "dotenv": "^16.4.5",
     "joi": "^17.13.3",
-    "node-telegram-bot-api": "^0.66.0",
-    "wireguard-tools": "^0.1.0"
+    "node-telegram-bot-api": "^0.66.0"
   }
 }

@@ -1,9 +1,9 @@
 import "./aliases"
-import path from 'path'
 import TelegramBot, { type User, Chat } from "node-telegram-bot-api"
 import config from "./config"
 import { TelegramCommand } from "@interfaces/telegram"
-import { WgConfig, getConfigObjectFromFile } from 'wireguard-tools'
+import {newClient} from '@services/wg';
+
 export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Help]
 
 class Telegram {
@@ -62,16 +62,7 @@ class Telegram {
   }
 
   private async vpn(chat: Chat) {
-    const filePath = path.join(__dirname, '/etc/wireguard', '/wg0.conf')
-
-    const config = new WgConfig({ filePath })
-    await config.parseFile()
-
-    await config.generateKeys()
-    await config.writeToFile()
-
-    await config.generateKeys()
-
+    newClient('test1')
     this.sendMessage(chat, "VPN")
   }
 
