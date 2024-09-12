@@ -78,8 +78,11 @@ export const newClient = async (name: string) => {
     const ipV6 = await getIpV6(dotIp)
 console.log("ips", ipV4, ipV6)
     const clientPrivateKey = await exec("wg genkey")
+    console.log("clientPrivateKey", clientPrivateKey)
     const clientPublicKey = await exec(`echo "${clientPrivateKey}" | wg pubkey`)
+    console.log("clientPublicKey", clientPublicKey)
     const clientPresharedKey = await exec("wg genpsk")
+    console.log("clientPresharedKey", clientPresharedKey)
 
 
    const a = await exec(`echo "${generateClientConf(clientPrivateKey, clientPresharedKey, ipV4, ipV6)}" >"${__dirname}/${wgParams.SERVER_WG_NIC}-client-${name}.conf"`)
