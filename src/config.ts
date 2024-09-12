@@ -66,7 +66,7 @@ export default {
     done: [[{ text: "📝 Инструкция", callback_data: "manual" }]],
     manual: [[
       { text: "📲 Приложение для Iphone", url: "https://itunes.apple.com/us/app/wireguard/id1441195209?ls=1&mt=8" },
-      { text: "📱 Приложение для Android", url: "https://play.google.com/store/apps/details?id=com.wireguard.android" }
+      { text: "📱 Приложение для Android", url: "https://play.google.com/store/apps/details?id=com.wireguard.android" },
       { text: "💻 Приложение для macOS", url: "https://apps.apple.com/ru/app/wireguard/id1451685025" },
       { text: "🖥️ Приложение для Windows", url: "https://download.wireguard.com/windows-client/wireguard-installer.exe" }
     ]],
