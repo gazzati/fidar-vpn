@@ -74,7 +74,7 @@ export const newClient = async (name: string) => {
   if (exist) throw Error("Client already exist")
 
   const dotIp = await getDotIp()
-console.log('dotIp', dotIp)
+
   const ipV4 = await getIpV4(dotIp)
   const ipV6 = await getIpV6(dotIp)
 
@@ -96,7 +96,7 @@ console.log('dotIp', dotIp)
 
   await exec(`echo "${serverConf}" >> ${profilePath}`)
 
-  await exec(`wg syncconf "${wgParams.SERVER_WG_NIC}" <(wg-quick strip "${wgParams.SERVER_WG_NIC}")`)
+  await exec(`wg syncconf ${wgParams.SERVER_WG_NIC} <(wg-quick strip ${wgParams.SERVER_WG_NIC})`)
 
   const qr = await exec(`qrencode -t ansiutf8 < ${clientConfPath}`)
 
