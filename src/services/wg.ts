@@ -66,6 +66,14 @@ Endpoint = ${wgParams.SERVER_PUB_IP}:${wgParams.SERVER_PORT}
 AllowedIPs = ${wgParams.ALLOWED_IPS}`
 }
 
+const generateServerConf = (name: string, clientPublicKey: string, clientPresharedKey: string, ipV4: string, ipV6: string) => {
+    return `\n### Client ${name}
+[Peer]
+PublicKey = ${clientPublicKey}
+PresharedKey = ${clientPresharedKey}
+AllowedIPs = ${ipV4}/32,${ipV6}/128`
+  }
+
 export const newClient = async (name: string) => {
   if (!name || !new RegExp(/^[a-zA-Z0-9_-]+$/).test(name)) throw Error("Invalid [name] format")
 
@@ -73,24 +81,29 @@ export const newClient = async (name: string) => {
   if (exist) throw Error("Client already exist")
 
   const dotIp = await getDotIp()
-  console.log("dotIp", dotIp)
+
   const ipV4 = await getIpV4(dotIp)
   const ipV6 = await getIpV6(dotIp)
-  console.log("ips", ipV4, ipV6)
+
   const clientPrivateKey = await exec("wg genkey")
   if (!clientPrivateKey) throw Error("[clientPrivateKey] not generated")
-  console.log("clientPrivateKey", clientPrivateKey)
+
   const clientPublicKey = await exec(`echo "${clientPrivateKey}" | wg pubkey`)
   if (!clientPublicKey) throw Error("[clientPublicKey] not generated")
-  console.log("clientPublicKey", clientPublicKey)
+
   const clientPresharedKey = await exec("wg genpsk")
   if (!clientPresharedKey) throw Error("[clientPresharedKey] not generated")
-  console.log("clientPresharedKey", clientPresharedKey)
 
   const clientConf = generateClientConf(clientPrivateKey, clientPresharedKey, ipV4, ipV6)
   const clientConfPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.conf`
 
   await exec(`echo "${clientConf}" > ${clientConfPath}`)
+
+  const serverConf = generateServerConf(name, clientPublicKey, clientPresharedKey, ipV4, ipV6)
+
+  await exec(`echo "${serverConf}" >> ${profilePath}`)
+
+  await exec(`wg syncconf "${wgParams.SERVER_WG_NIC}" <(wg-quick strip "${wgParams.SERVER_WG_NIC}")`)
 
   const qr = await exec(`qrencode -t ansiutf8 < ${clientConfPath}`)
 
