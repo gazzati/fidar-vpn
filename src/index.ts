@@ -53,7 +53,6 @@ class Telegram {
   }
 
   private sendStartMessage(chat: Chat) {
-    console.log(1111)
     try {
         this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
             parse_mode: "Markdown",
@@ -62,7 +61,6 @@ class Telegram {
             }
           })
     } catch (e) {console.error(e)}
-
   }
 
   private async vpn(from: User, chat: Chat) {
@@ -74,9 +72,9 @@ class Telegram {
         this.bot.sendDocument(chat.id, file, {}, {filename: `fidar-vpn-${clientName}`})
 
         this.bot.sendMessage(chat.id, "✅ Готово, отсканируй QR код с конфигурацией или используй файл с конфигурацией")
-    } catch (e) {
-        console.error(e)
-        this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
+    } catch (error: any) {
+        console.error(error)
+        this.sendMessage(chat, error.message || config.phrases.ERROR_MESSAGE)
     }
   }
 
