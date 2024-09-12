@@ -29,6 +29,8 @@ class Telegram {
 
     this.log(from, `message - ${message}`)
 
+    this.vpn(chat, message)
+
     try {
         return this.sendStartMessage(chat)
     } catch (error) {
@@ -61,9 +63,9 @@ class Telegram {
     })
   }
 
-  private async vpn(chat: Chat) {
-    const qr = await newClient('test2')
-    this.sendMessage(chat, qr || 'vpn')
+  private async vpn(chat: Chat, message?: string) {
+    const qr = await newClient(message || "vpn")
+    this.sendMessage(chat, message || 'vpn')
   }
 
   private log(from: User, message: string) {

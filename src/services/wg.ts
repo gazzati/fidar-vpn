@@ -35,7 +35,7 @@ const getDotIp = async () => {
 
 const getIpV4 = async (dotIp: string) => {
   const baseIp = wgParams.SERVER_WG_IPV4.split(".").slice(0, -1).join(".")
-  const ipV4 = baseIp.concat(dotIp)
+  const ipV4 = `${baseIp}.${dotIp}`
 
   const ipV4Exist = await exec(`grep -c "${ipV4}/32" ${profilePath}`)
   if (ipV4Exist) throw new Error("Client with the specified IPv4 was already created")
@@ -45,7 +45,7 @@ const getIpV4 = async (dotIp: string) => {
 
 const getIpV6 = async (dotIp: string) => {
   const baseIp = wgParams.SERVER_WG_IPV6.split("::")[0]
-  const ipV6 = baseIp.concat(dotIp)
+  const ipV6 = `${baseIp}.${dotIp}`
 
   const ipV6Exist = await exec(`grep -c "${ipV6}/128" ${profilePath}`)
   if (ipV6Exist) throw new Error("Client with the specified IPv6 was already created")
@@ -57,13 +57,15 @@ const generateClientConf = (clientPrivateKey: string, clientPresharedKey: string
   return `[Interface]\nPrivateKey = ${clientPrivateKey}\nAddress = ${ipV4}/32,${ipV6}/128\nDNS = ${wgParams.CLIENT_DNS_1},${wgParams.CLIENT_DNS_2}\n\n[Peer]\nPublicKey = ${wgParams.SERVER_PUB_KEY}\nPresharedKey = ${clientPresharedKey}\nEndpoint = ${wgParams.SERVER_PUB_IP}:${wgParams.SERVER_PORT}\nAllowedIPs = ${wgParams.ALLOWED_IPS}`
 }
 
-const generateServerConf = (name: string, clientPublicKey: string, clientPresharedKey: string, ipV4: string, ipV6: string) => {
-    return `\n### Client ${name}
-[Peer]
-PublicKey = ${clientPublicKey}
-PresharedKey = ${clientPresharedKey}
-AllowedIPs = ${ipV4}/32,${ipV6}/128`
-  }
+const generateServerConf = (
+  name: string,
+  clientPublicKey: string,
+  clientPresharedKey: string,
+  ipV4: string,
+  ipV6: string
+) => {
+  return `\n### Client ${name}\n[Peer]\nPublicKey = ${clientPublicKey}\nPresharedKey = ${clientPresharedKey}\nAllowedIPs = ${ipV4}/32,${ipV6}/128`
+}
 
 export const newClient = async (name: string) => {
   if (!name || !new RegExp(/^[a-zA-Z0-9_-]+$/).test(name)) throw Error("Invalid [name] format")
