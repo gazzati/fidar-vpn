@@ -54,12 +54,15 @@ class Telegram {
 
   private sendStartMessage(chat: Chat) {
     console.log(1111)
-    this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: config.inlineKeyboard
-      }
-    })
+    try {
+        this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: config.inlineKeyboard
+            }
+          })
+    } catch (e) {console.error(e)}
+
   }
 
   private async vpn(from: User, chat: Chat) {
