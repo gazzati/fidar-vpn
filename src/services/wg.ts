@@ -90,7 +90,8 @@ console.log("ips", ipV4, ipV6)
     const clientConf = generateClientConf(clientPrivateKey, clientPresharedKey, ipV4, ipV6)
     console.log("clientConf", clientConf)
 
-   const a = await exec(`echo "${clientConf}" >"${__dirname}/${wgParams.SERVER_WG_NIC}-client-${name}.conf"`)
+    console.log('path', `${__dirname}/${wgParams.SERVER_WG_NIC}-client-${name}.conf`)
+   const a = await exec(`echo "${clientConf}" > "${__dirname}/${wgParams.SERVER_WG_NIC}-client-${name}.conf"`)
 
    console.log(a)
 }
