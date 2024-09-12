@@ -101,9 +101,10 @@ export const newClient = async (name: string) => {
   await exec(`wg-quick down ${wgParams.SERVER_WG_NIC}`)
   await exec(`wg-quick up ${wgParams.SERVER_WG_NIC}`)
 
-  const qr = await exec(`qrencode -t ansiutf8 < ${clientConfPath}`)
+  //const qr = await exec(`qrencode -t ansiutf8 < ${clientConfPath}`)
 
-  console.log(qr)
+  const clientConfQrPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.png`
+  await exec(`qrencode -t png -o ${clientConfQrPath} -r ${clientConfPath}`)
 
-  return qr
+  return clientConfQrPath
 }

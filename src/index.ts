@@ -20,7 +20,7 @@ class Telegram {
     })
 
     this.bot.on("callback_query", query => {
-        if(query.message && query.data === config.inlineKeyboard[0][0].callback_data) this.vpn(query.message.chat)
+        if(query.message && query.data === config.inlineKeyboard[0][0].callback_data) this.vpn(query.from, query.message.chat)
     })
   }
 
@@ -29,10 +29,8 @@ class Telegram {
 
     this.log(from, `message - ${message}`)
 
-
-
     try {
-        await this.vpn(chat, message)
+        return this.sendStartMessage(chat)
     } catch (error) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
@@ -63,10 +61,13 @@ class Telegram {
     })
   }
 
-  private async vpn(chat: Chat, message?: string) {
+  private async vpn(from: User, chat: Chat) {
     try {
-        const qr = await newClient(message || "vpn")
-        this.sendMessage(chat, qr || 'vpn')
+        const clientName = new Date().getTime().toString()
+        const qrPath = await newClient(clientName)
+
+
+        this.bot.sendPhoto(chat.id, qrPath, "Готово, отсканируй QR код с конфигурацией")
     } catch (e) {
         console.error(e)
         this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
