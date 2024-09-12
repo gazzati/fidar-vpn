@@ -54,7 +54,7 @@ export default {
   wgParams: getWgParams(),
 
   phrases: {
-    START_MESSAGE: "*Добро пожаловать в FídarVPN* \n\n🚀 Высокосоростной анонимный VPN с безлимтным трафиком \n\n",
+    START_MESSAGE: "*Добро пожаловать в FídarVPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимтным трафиком \n\n",
     HELP_MESSAGE: "По всем вопросам пиши @gazzati",
     ERROR_MESSAGE: "🤷‍♂️ Что то пошло не так, попробуйте повторить позже",
     ALREADY_EXIST_MESSAGE: "🤝 У вас уже есть конфигурация",
@@ -67,12 +67,12 @@ export default {
     done: [[{ text: "📝 Инструкция", callback_data: "manual" }]],
     manual: [
       [
-        { text: "📲 Приложение для Iphone", url: "https://itunes.apple.com/us/app/wireguard/id1441195209?ls=1&mt=8" },
-        { text: "📱 Приложение для Android", url: "https://play.google.com/store/apps/details?id=com.wireguard.android" }
+        { text: "📲 Iphone", url: "https://itunes.apple.com/us/app/wireguard/id1441195209?ls=1&mt=8" },
+        { text: "📱 Android", url: "https://play.google.com/store/apps/details?id=com.wireguard.android" }
       ],
       [
-        { text: "💻 Приложение для macOS", url: "https://apps.apple.com/ru/app/wireguard/id1451685025" },
-        { text: "🖥️ Приложение для Windows", url: "https://download.wireguard.com/windows-client/wireguard-installer.exe" }
+        { text: "💻 macOS", url: "https://apps.apple.com/ru/app/wireguard/id1451685025" },
+        { text: "🖥️ Windows", url: "https://download.wireguard.com/windows-client/wireguard-installer.exe" }
       ]
     ],
   }
