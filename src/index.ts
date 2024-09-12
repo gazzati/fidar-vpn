@@ -32,7 +32,7 @@ class Telegram {
 
 
     try {
-        this.vpn(chat, message)
+        await this.vpn(chat, message)
     } catch (error) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
@@ -64,8 +64,13 @@ class Telegram {
   }
 
   private async vpn(chat: Chat, message?: string) {
-    const qr = await newClient(message || "vpn")
-    this.sendMessage(chat, message || 'vpn')
+    try {
+        const qr = await newClient(message || "vpn")
+        this.sendMessage(chat, message || 'vpn')
+    } catch (e) {
+        console.error(e)
+        this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
+    }
   }
 
   private log(from: User, message: string) {
