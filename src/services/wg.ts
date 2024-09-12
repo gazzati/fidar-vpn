@@ -8,7 +8,7 @@ const { wgParams } = config
 
 const MAX_CLIENTS = 253
 
-const profilePath = `/etc/wireguard/${wgParams.SERVER_PUB_NIC}.conf`
+const profilePath = `/etc/wireguard/${wgParams.SERVER_WG_NIC}.conf`
 
 const exec = async (command: string) => {
     const { stdout, stderr } = await execute(command)
