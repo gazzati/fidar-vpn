@@ -11,88 +11,88 @@ const MAX_CLIENTS = 253
 const profilePath = `/etc/wireguard/${wgParams.SERVER_WG_NIC}.conf`
 
 const exec = async (command: string) => {
-    try {
-        const { stdout, stderr } = await execute(command)
-        if (stderr) console.error(stderr)
+  try {
+    const { stdout, stderr } = await execute(command)
+    if (stderr) console.error(stderr)
 
-        return stdout
-      } catch (e) {
-        console.error(e);
-      }
+    return stdout
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const getDotIp = async () => {
-    const baseIp = wgParams.SERVER_WG_IPV4.split(".").slice(0, -1).join(".")
-    const availableDots = Array.from({length: MAX_CLIENTS}, (_, i) => i + 2)
+  const baseIp = wgParams.SERVER_WG_IPV4.split(".").slice(0, -1).join(".")
+  const availableDots = Array.from({ length: MAX_CLIENTS }, (_, i) => i + 2)
 
-    for(const dot in availableDots) {
-        const dotExist = await exec(`grep -c "${baseIp}.${dot}" ${profilePath}`)
-        if(!dotExist) return dot
-    }
+  for (const dot in availableDots) {
+    const dotExist = await exec(`grep -c "${baseIp}.${dot}" ${profilePath}`)
+    if (!dotExist) return dot
+  }
 
-    throw new Error(`The subnet configured supports only ${MAX_CLIENTS} clients`)
+  throw new Error(`The subnet configured supports only ${MAX_CLIENTS} clients`)
 }
 
 const getIpV4 = async (dotIp: string) => {
-    const baseIp = wgParams.SERVER_WG_IPV4.split(".").slice(0, -1).join(".")
-    const ipV4 = baseIp.concat(dotIp)
+  const baseIp = wgParams.SERVER_WG_IPV4.split(".").slice(0, -1).join(".")
+  const ipV4 = baseIp.concat(dotIp)
 
-    const ipV4Exist =  await exec(`grep -c "${ipV4}/32" ${profilePath}`)
-    if(ipV4Exist)  throw new Error("Client with the specified IPv4 was already created")
+  const ipV4Exist = await exec(`grep -c "${ipV4}/32" ${profilePath}`)
+  if (ipV4Exist) throw new Error("Client with the specified IPv4 was already created")
 
-    return ipV4
+  return ipV4
 }
 
 const getIpV6 = async (dotIp: string) => {
-    const baseIp = wgParams.SERVER_WG_IPV6.split("::")[0]
-    const ipV6 = baseIp.concat(dotIp)
+  const baseIp = wgParams.SERVER_WG_IPV6.split("::")[0]
+  const ipV6 = baseIp.concat(dotIp)
 
-    const ipV6Exist =  await exec(`grep -c "${ipV6}/128" ${profilePath}`)
-    if(ipV6Exist)  throw new Error("Client with the specified IPv6 was already created")
+  const ipV6Exist = await exec(`grep -c "${ipV6}/128" ${profilePath}`)
+  if (ipV6Exist) throw new Error("Client with the specified IPv6 was already created")
 
-    return ipV6
+  return ipV6
 }
 
 const generateClientConf = (clientPrivateKey: string, clientPresharedKey: string, ipV4: string, ipV6: string) => {
-    return `[Interface]
-    PrivateKey = ${clientPrivateKey}
-    Address = ${ipV4}/32,${ipV6}/128
-    DNS = ${wgParams.CLIENT_DNS_1},${wgParams.CLIENT_DNS_2}
+  return `[Interface]
+PrivateKey = ${clientPrivateKey}
+Address = ${ipV4}/32,${ipV6}/128
+DNS = ${wgParams.CLIENT_DNS_1},${wgParams.CLIENT_DNS_2}
 
-    [Peer]
-    PublicKey = ${wgParams.SERVER_PUB_KEY}
-    PresharedKey = ${clientPresharedKey}
-    Endpoint = ${wgParams.SERVER_PUB_IP}:${wgParams.SERVER_PORT}
-    AllowedIPs = ${wgParams.ALLOWED_IPS}`
+[Peer]
+PublicKey = ${wgParams.SERVER_PUB_KEY}
+PresharedKey = ${clientPresharedKey}
+Endpoint = ${wgParams.SERVER_PUB_IP}:${wgParams.SERVER_PORT}
+AllowedIPs = ${wgParams.ALLOWED_IPS}`
 }
 
 export const newClient = async (name: string) => {
-    if(!name || !new RegExp(/^[a-zA-Z0-9_-]+$/).test(name)) throw Error("Invalid [name] format")
+  if (!name || !new RegExp(/^[a-zA-Z0-9_-]+$/).test(name)) throw Error("Invalid [name] format")
 
-    const exist = await exec(`grep -c -E "^### Client ${name}\$" ${profilePath}`)
-    if(exist) throw Error("Client already exist")
+  const exist = await exec(`grep -c -E "^### Client ${name}\$" ${profilePath}`)
+  if (exist) throw Error("Client already exist")
 
-    const dotIp = await getDotIp()
-    console.log("dotIp", dotIp)
-    const ipV4 = await getIpV4(dotIp)
-    const ipV6 = await getIpV6(dotIp)
-console.log("ips", ipV4, ipV6)
-    const clientPrivateKey = await exec("wg genkey")
-    if(!clientPrivateKey) throw Error("[clientPrivateKey] not generated")
-    console.log("clientPrivateKey", clientPrivateKey)
-    const clientPublicKey = await exec(`echo "${clientPrivateKey}" | wg pubkey`)
-    if(!clientPublicKey) throw Error("[clientPublicKey] not generated")
-    console.log("clientPublicKey", clientPublicKey)
-    const clientPresharedKey = await exec("wg genpsk")
-    if(!clientPresharedKey) throw Error("[clientPresharedKey] not generated")
-    console.log("clientPresharedKey", clientPresharedKey)
+  const dotIp = await getDotIp()
+  console.log("dotIp", dotIp)
+  const ipV4 = await getIpV4(dotIp)
+  const ipV6 = await getIpV6(dotIp)
+  console.log("ips", ipV4, ipV6)
+  const clientPrivateKey = await exec("wg genkey")
+  if (!clientPrivateKey) throw Error("[clientPrivateKey] not generated")
+  console.log("clientPrivateKey", clientPrivateKey)
+  const clientPublicKey = await exec(`echo "${clientPrivateKey}" | wg pubkey`)
+  if (!clientPublicKey) throw Error("[clientPublicKey] not generated")
+  console.log("clientPublicKey", clientPublicKey)
+  const clientPresharedKey = await exec("wg genpsk")
+  if (!clientPresharedKey) throw Error("[clientPresharedKey] not generated")
+  console.log("clientPresharedKey", clientPresharedKey)
 
-    const clientConf = generateClientConf(clientPrivateKey, clientPresharedKey, ipV4, ipV6)
-    console.log("clientConf", clientConf)
+  const clientConf = generateClientConf(clientPrivateKey, clientPresharedKey, ipV4, ipV6)
+  const clientConfPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.conf`
 
-    console.log('path', `${__dirname}/${wgParams.SERVER_WG_NIC}-client-${name}.conf`)
-   const a = await exec(`echo "${clientConf}" > "${__dirname}/${wgParams.SERVER_WG_NIC}-client-${name}.conf"`)
+  await exec(`echo "${clientConf}" > ${clientConfPath}`)
 
-   console.log(a)
+  const qr = await exec(`qrencode -t ansiutf8 < ${clientConfPath}`)
+
+  console.log(qr)
 }
-
