@@ -24,7 +24,7 @@ const exec = async (command: string) => {
 const getDotIp = async () => {
   const baseIp = wgParams.SERVER_WG_IPV4.split(".").slice(0, -1).join(".")
   const availableDots = Array.from({ length: MAX_CLIENTS }, (_, i) => i + 2)
-console.log('availableDots', availableDots)
+
   for (const dot in availableDots) {
     const dotExist = await exec(`grep -c "${baseIp}.${dot}" ${profilePath}`)
     if (!dotExist) return dot
@@ -45,7 +45,7 @@ const getIpV4 = async (dotIp: string) => {
 
 const getIpV6 = async (dotIp: string) => {
   const baseIp = wgParams.SERVER_WG_IPV6.split("::")[0]
-  const ipV6 = `${baseIp}.${dotIp}`
+  const ipV6 = `${baseIp}::${dotIp}`
 
   const ipV6Exist = await exec(`grep -c "${ipV6}/128" ${profilePath}`)
   if (ipV6Exist) throw new Error("Client with the specified IPv6 was already created")
