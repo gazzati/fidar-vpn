@@ -4,7 +4,7 @@ import config from "./config"
 import { TelegramCommand } from "@interfaces/telegram"
 import {newClient} from '@services/wg';
 
-export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Help]
+export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Manual, TelegramCommand.Help]
 
 class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
@@ -20,7 +20,8 @@ class Telegram {
     })
 
     this.bot.on("callback_query", query => {
-        if(query.message && query.data === config.inlineKeyboard[0][0].callback_data) this.vpn(query.from, query.message.chat)
+        if(query.message && query.data === config.inlineKeyboard.start[0][0].callback_data) this.vpn(query.from, query.message.chat)
+        if(query.message && query.data === config.inlineKeyboard.done[0][0].callback_data) this.manual(query.message.chat)
     })
   }
 
@@ -43,24 +44,11 @@ class Telegram {
     switch (action) {
       case TelegramCommand.Start:
         return this.sendStartMessage(chat)
+      case TelegramCommand.Manual:
+        return this.manual(chat)
       case TelegramCommand.Help:
         return this.sendMessage(chat, config.phrases.HELP_MESSAGE)
     }
-  }
-
-  private sendMessage(chat: Chat, message: string) {
-    this.bot.sendMessage(chat.id, message)
-  }
-
-  private sendStartMessage(chat: Chat) {
-    try {
-        this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
-            parse_mode: "Markdown",
-            reply_markup: {
-              inline_keyboard: config.inlineKeyboard
-            }
-          })
-    } catch (e) {console.error(e)}
   }
 
   private async vpn(from: User, chat: Chat) {
@@ -71,11 +59,46 @@ class Telegram {
         this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})
         this.bot.sendDocument(chat.id, file, {}, {filename: `fidar-vpn-${clientName}`})
 
-        this.bot.sendMessage(chat.id, "✅ Готово, отсканируй QR код с конфигурацией или используй файл с конфигурацией")
+        this.sendDoneMessage(chat)
     } catch (error: any) {
         console.error(error)
         this.sendMessage(chat, error.message || config.phrases.ERROR_MESSAGE)
     }
+  }
+
+  private async manual(chat: Chat) {
+    this.sendManualMessage(chat)
+  }
+
+  private sendDoneMessage(chat: Chat) {
+    this.bot.sendMessage(chat.id, config.phrases.DONE_MESSAGE, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: config.inlineKeyboard.done
+        }
+      })
+  }
+
+  private sendManualMessage(chat: Chat) {
+    this.bot.sendMessage(chat.id, config.phrases.MANUAL_MESSAGE, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: config.inlineKeyboard.manual
+        }
+      })
+  }
+
+  private sendStartMessage(chat: Chat) {
+    this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
+        parse_mode: "Markdown",
+        reply_markup: {
+          inline_keyboard: config.inlineKeyboard.start
+        }
+      })
+  }
+
+  private sendMessage(chat: Chat, message: string) {
+    this.bot.sendMessage(chat.id, message)
   }
 
   private log(from: User, message: string) {
