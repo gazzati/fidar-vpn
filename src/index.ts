@@ -67,7 +67,7 @@ class Telegram {
         const qrPath = await newClient(clientName)
 
 
-        this.bot.sendPhoto(chat.id, qrPath, "Готово, отсканируй QR код с конфигурацией")
+        this.bot.sendPhoto(chat.id, qrPath, {caption: "Готово, отсканируй QR код с конфигурацией"})
     } catch (e) {
         console.error(e)
         this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
