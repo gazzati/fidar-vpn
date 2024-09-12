@@ -53,6 +53,7 @@ class Telegram {
   }
 
   private sendStartMessage(chat: Chat) {
+    console.log(1111)
     this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
       parse_mode: "Markdown",
       reply_markup: {
