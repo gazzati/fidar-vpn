@@ -64,7 +64,7 @@ const generateServerConf = (
   ipV4: string,
   ipV6: string
 ) => {
-  return `\n### Client ${name}\n[Peer]\nPublicKey = ${clientPublicKey}\nPresharedKey = ${clientPresharedKey}\nAllowedIPs = ${ipV4}/32,${ipV6}/128`
+  return `\n### Client ${name}\n[Peer]\nPublicKey = ${clientPublicKey}PresharedKey = ${clientPresharedKey}AllowedIPs = ${ipV4}/32,${ipV6}/128`
 }
 
 export const newClient = async (name: string) => {
