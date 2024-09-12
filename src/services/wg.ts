@@ -70,8 +70,19 @@ const generateServerConf = (
 export const newClient = async (name: string) => {
   if (!name || !new RegExp(/^[a-zA-Z0-9_-]+$/).test(name)) throw Error("Invalid [name] format")
 
+  const clientConfPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.conf`
+  const clientConfQrPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.png`
+
   const exist = await exec(`grep -c -E "^### Client ${name}\$" ${profilePath}`)
-  if (exist) throw Error("Client already exist")
+  if (exist) {
+    console.error(`Client ${name} already exist`)
+
+    return {
+      file: clientConfPath,
+      qr: clientConfQrPath,
+      alreadyExist: true
+    }
+  }
 
   const dotIp = await getDotIp()
 
@@ -88,7 +99,6 @@ export const newClient = async (name: string) => {
   if (!clientPresharedKey) throw Error("[clientPresharedKey] not generated")
 
   const clientConf = generateClientConf(clientPrivateKey, clientPresharedKey, ipV4, ipV6)
-  const clientConfPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.conf`
 
   await exec(`echo "${clientConf}" > ${clientConfPath}`)
 
@@ -103,7 +113,6 @@ export const newClient = async (name: string) => {
 
   //const qr = await exec(`qrencode -t ansiutf8 < ${clientConfPath}`)
 
-  const clientConfQrPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.png`
   await exec(`qrencode -t png -o ${clientConfQrPath} -r ${clientConfPath}`)
 
 

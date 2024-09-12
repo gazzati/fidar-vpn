@@ -54,7 +54,11 @@ class Telegram {
   private async vpn(from: User, chat: Chat) {
     try {
         const clientName = from.username || new Date().getTime().toString()
-        const { file, qr } = await newClient(clientName)
+        const { file, qr, alreadyExist } = await newClient(clientName)
+
+        if(alreadyExist) {
+            this.sendMessage(chat, config.phrases.ALREADY_EXIST_MESSAGE)
+        }
 
         await this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})
         await this.bot.sendDocument(chat.id, file, {}, {filename: `fidar-vpn-${clientName}`})
