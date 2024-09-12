@@ -29,10 +29,10 @@ class Telegram {
 
     this.log(from, `message - ${message}`)
 
-    this.vpn(chat, message)
+
 
     try {
-        return this.sendStartMessage(chat)
+        this.vpn(chat, message)
     } catch (error) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
