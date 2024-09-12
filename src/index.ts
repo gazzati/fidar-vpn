@@ -58,6 +58,7 @@ class Telegram {
 
         if(alreadyExist) {
             this.sendMessage(chat, config.phrases.ALREADY_EXIST_MESSAGE)
+            await new Promise(resolve => setTimeout(resolve, 1000))
         }
 
         await this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})

@@ -17,7 +17,7 @@ const exec = async (command: string) => {
 
     return stdout
   } catch (e) {
-    console.error(e)
+    // console.error(e)
   }
 }
 
