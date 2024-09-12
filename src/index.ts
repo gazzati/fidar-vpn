@@ -63,7 +63,7 @@ class Telegram {
 
   private async vpn(from: User, chat: Chat) {
     try {
-        const clientName = new Date().getTime().toString()
+        const clientName = from.username || new Date().getTime().toString()
         const { file, qr } = await newClient(clientName)
 
         this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})
