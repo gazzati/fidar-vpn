@@ -24,7 +24,7 @@ const exec = async (command: string) => {
 const getDotIp = async () => {
   const baseIp = wgParams.SERVER_WG_IPV4.split(".").slice(0, -1).join(".")
   const availableDots = Array.from({ length: MAX_CLIENTS }, (_, i) => i + 2)
-
+console.log('availableDots', availableDots)
   for (const dot in availableDots) {
     const dotExist = await exec(`grep -c "${baseIp}.${dot}" ${profilePath}`)
     if (!dotExist) return dot
@@ -74,7 +74,7 @@ export const newClient = async (name: string) => {
   if (exist) throw Error("Client already exist")
 
   const dotIp = await getDotIp()
-
+console.log('dotIp', dotIp)
   const ipV4 = await getIpV4(dotIp)
   const ipV6 = await getIpV6(dotIp)
 
