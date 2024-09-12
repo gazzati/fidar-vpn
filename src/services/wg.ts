@@ -73,10 +73,10 @@ export const newClient = async (name: string) => {
     if(exist) throw Error("Client already exist")
 
     const dotIp = await getDotIp()
-
+    console.log("dotIp", dotIp)
     const ipV4 = await getIpV4(dotIp)
     const ipV6 = await getIpV6(dotIp)
-
+console.log("ips", ipV4, ipV6)
     const clientPrivateKey = await exec("wg genkey")
     const clientPublicKey = await exec(`echo "${clientPrivateKey}" | wg pubkey`)
     const clientPresharedKey = await exec("wg genpsk")
