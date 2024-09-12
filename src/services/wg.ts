@@ -106,5 +106,9 @@ export const newClient = async (name: string) => {
   const clientConfQrPath = `/home/wg/clients/${wgParams.SERVER_WG_NIC}-client-${name}.png`
   await exec(`qrencode -t png -o ${clientConfQrPath} -r ${clientConfPath}`)
 
-  return clientConfQrPath
+
+  return {
+    file: clientConfPath,
+    qr: clientConfQrPath
+  }
 }

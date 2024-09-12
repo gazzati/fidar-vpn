@@ -64,10 +64,12 @@ class Telegram {
   private async vpn(from: User, chat: Chat) {
     try {
         const clientName = new Date().getTime().toString()
-        const qrPath = await newClient(clientName)
+        const { file, qr } = await newClient(clientName)
 
+        this.bot.sendPhoto(chat.id, qr)
+        this.bot.sendDocument(chat.id, file)
 
-        this.bot.sendPhoto(chat.id, qrPath, {caption: "Готово, отсканируй QR код с конфигурацией"})
+        this.bot.sendMessage(chat.id, "✅ Готово, отсканируй QR код с конфигурацией или используй файл с конфигурацией")
     } catch (e) {
         console.error(e)
         this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
