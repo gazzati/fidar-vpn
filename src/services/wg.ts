@@ -54,7 +54,7 @@ const getIpV6 = async (dotIp: string) => {
 }
 
 const generateClientConf = (clientPrivateKey: string, clientPresharedKey: string, ipV4: string, ipV6: string) => {
-    `[Interface]
+    return `[Interface]
     PrivateKey = ${clientPrivateKey}
     Address = ${ipV4}/32,${ipV6}/128
     DNS = ${wgParams.CLIENT_DNS_1},${wgParams.CLIENT_DNS_2}
