@@ -1,5 +1,5 @@
 export enum TelegramCommand {
   Start = "/start",
-  Manual = "/analyze_photo",
+  Manual = "/manual",
   Help = "/help"
 }
