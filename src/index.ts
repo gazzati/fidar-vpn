@@ -94,15 +94,9 @@ class Telegram {
 
       this.sendDoneMessage(chat)
 
-      await entities.Client.save({
-        user_id: userId,
-        server: { id: server.id },
-        ...(from.username && { username: from.username }),
-        ...(from.first_name && { first_name: from.first_name }),
-        ...(from.last_name && { last_name: from.last_name })
-      })
-
       this.log(from, `✅ Client created server [${serverName}]`)
+
+      this.saveClient(from, server.id)
     } catch (error: any) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
@@ -111,6 +105,19 @@ class Telegram {
 
   private manual(chat: Chat) {
     this.sendManualMessage(chat)
+  }
+
+  private async saveClient(from: User, serverId: number) {
+    const client = await entities.Client.findOne({ where: { user_id: from.id, server: { id: serverId } } })
+    if (!client) {
+      await entities.Client.save({
+        user_id: from.id,
+        server: { id: serverId },
+        ...(from.username && { username: from.username }),
+        ...(from.first_name && { first_name: from.first_name }),
+        ...(from.last_name && { last_name: from.last_name })
+      })
+    }
   }
 
   private sendDoneMessage(chat: Chat) {

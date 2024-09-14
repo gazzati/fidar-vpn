@@ -5,7 +5,7 @@ import { Client } from "./Client"
 @Entity({ name: "servers" })
 export class Server {
   @PrimaryGeneratedColumn()
-  id: string
+  id: number
 
   @Column()
   name: string
