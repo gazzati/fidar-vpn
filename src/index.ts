@@ -36,7 +36,7 @@ class Telegram {
   }
 
   private commands(from: User, chat: Chat, action: string) {
-    this.log(from, `command - ${action}`)
+    this.log(from, `📋 command - ${action}`)
 
     switch (action) {
       case TelegramCommand.Start:
@@ -54,7 +54,7 @@ class Telegram {
     const {message, data, from} = query
     if(!message || !data || !from) return
 
-    this.log(from, `callback query - ${data}`)
+    this.log(from, `🤙 callback query - ${data}`)
 
     const {chat} = message
 
