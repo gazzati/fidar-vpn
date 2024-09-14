@@ -1,5 +1,5 @@
 import "./aliases"
-import { createClient } from "@api/index"
+import { createClient, revokeClient } from "@api/index"
 import TelegramBot, { type User, Chat, CallbackQuery, InlineKeyboardButton } from "node-telegram-bot-api"
 
 import { entities } from "@root/database/data-source"
@@ -86,6 +86,18 @@ class Telegram {
   private async create(from: User, chat: Chat, serverName: string, messageId: number) {
     try {
       const userId = from.id
+
+      const client = await entities.Client.findOne({ where: { user_id: userId }, relations: { server: true } })
+      if(client?.server) {
+        const response = await revokeClient(client.server.ip, userId)
+        if(!response?.success) {
+          this.log(from, `❌ Error with client [${client.id}] deleting from [${serverName}]`)
+          this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
+          return
+        }
+
+        await entities.Client.delete({ user_id: userId })
+      }
 
       const server = await entities.Server.findOne({ where: { name: serverName } })
       if (!server?.ip) {

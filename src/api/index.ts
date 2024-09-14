@@ -9,6 +9,10 @@ export interface CreateClientResponse {
   already_exist?: boolean
 }
 
+export interface RevokeClientResponse {
+  success: boolean
+}
+
 export const getClients = async (ip: string): Promise<Array<number>> => {
   const response = await axios.get(`http://${ip}:${config.serversPort}/clients`, {timeout: 5_000})
   return response?.data || []
@@ -19,7 +23,7 @@ export const createClient = async (ip: string, id: number): Promise<CreateClient
   return response.data
 }
 
-export const revokeClient = async (ip: string, id: number) => {
-  const result = await axios.delete(`http://${ip}:${config.serversPort}/client/${id}`, {timeout: 5_000})
-  return result
+export const revokeClient = async (ip: string, id: number): Promise<RevokeClientResponse> => {
+  const result = await axios.delete<RevokeClientResponse>(`http://${ip}:${config.serversPort}/client/${id}`, {timeout: 5_000})
+  return result.data
 }
