@@ -1,6 +1,7 @@
 import "./aliases"
 import { createClient, revokeClient } from "@api/index"
 import TelegramBot, { type User, Chat, CallbackQuery, InlineKeyboardButton } from "node-telegram-bot-api"
+import { Not } from "typeorm"
 
 import { entities } from "@root/database/data-source"
 
@@ -56,7 +57,9 @@ class Telegram {
     const {chat} = message
 
     if (data === config.callbackData.location) {
-      const servers = await entities.Server.find({ where: { active: true } })
+      const client = await entities.Client.findOne({ where: { user_id: from.id } })
+
+      const servers = await entities.Server.find({ where: { active: true, ...(client && { id: Not(client.server.id)})  } })
       if(!servers) return logger.error("Servers not found")
 
       this.bot.deleteMessage(message.chat.id, message.message_id)
