@@ -12,7 +12,7 @@ import { TelegramCommand } from "@interfaces/telegram"
 
 import config from "./config"
 
-export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Manual, TelegramCommand.Help]
+export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Subscription, TelegramCommand.Manual, TelegramCommand.Help]
 
 class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
@@ -65,7 +65,7 @@ class Telegram {
       if(!servers) return logger.error("Servers not found")
 
       this.bot.deleteMessage(message.chat.id, message.message_id)
-      return this.sendLocationMessage(chat, servers)
+      return this.sendLocationMessage(chat, servers, !!client)
     }
 
     if (data.includes(config.callbackData.create)) {
@@ -189,9 +189,9 @@ class Telegram {
     this.sendMessage(chat, config.phrases.START_MESSAGE, config.inlineKeyboard.start)
   }
 
-  private sendLocationMessage(chat: Chat, servers: Array<Server>) {
+  private sendLocationMessage(chat: Chat, servers: Array<Server>, exist: boolean) {
     const data = servers.map(server => ({text: server.label, callback_data: `create:${server.name}`}))
-    this.sendMessage(chat, config.phrases.LOCATION_MESSAGE, [data, [{ text: "📌 Моя подписка", callback_data: config.callbackData.subscription }]])
+    this.sendMessage(chat, exist ? config.phrases.LOCATION_WITH_EXIST_MESSAGE : config.phrases.LOCATION_MESSAGE, [data, [{ text: "📌 Моя подписка", callback_data: config.callbackData.subscription }]])
   }
 
   private sendDoneMessage(chat: Chat) {
