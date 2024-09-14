@@ -13,6 +13,9 @@ export class Server {
   @Column()
   ip: string
 
+  @Column()
+  label: string
+
   @Column({ default: true })
   active: boolean
 

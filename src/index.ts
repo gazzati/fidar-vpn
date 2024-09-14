@@ -1,9 +1,10 @@
 import "./aliases"
 import { createClient } from "@api/index"
-import TelegramBot, { type User, Chat } from "node-telegram-bot-api"
+import TelegramBot, { type User, Chat, CallbackQuery, InlineKeyboardButton } from "node-telegram-bot-api"
 
 import { entities } from "@root/database/data-source"
 
+import { type Server } from "@database/entities/Server"
 import logger from "@helpers/logger"
 
 import { TelegramCommand } from "@interfaces/telegram"
@@ -25,27 +26,12 @@ class Telegram {
       this.message(from, chat, text)
     })
 
-    this.bot.on("callback_query", query => {
-      if (query.message && query.data === config.inlineKeyboard.start[0][0].callback_data)
-        this.vpn(query.from, query.message.chat)
-      if (query.message && query.data === config.inlineKeyboard.done[0][0].callback_data) {
-        this.log(query.from, `manual`)
-        this.manual(query.message.chat)
-      }
-    })
+    this.bot.on("callback_query", query => this.callbackQuery(query))
   }
 
   private message(from: User, chat: Chat, message: string) {
     this.bot.sendChatAction(chat.id, "typing")
-
     this.log(from, `message - ${message}`)
-
-    try {
-      return this.sendStartMessage(chat)
-    } catch (error) {
-      console.error(error)
-      this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
-    }
   }
 
   private commands(from: User, chat: Chat, action: string) {
@@ -61,12 +47,46 @@ class Telegram {
     }
   }
 
-  private async vpn(from: User, chat: Chat) {
+  private async callbackQuery(query: CallbackQuery) {
+    const {message, data, from} = query
+    if(!message || !data || !from) return
+
+    this.log(from, `callback query - ${data}`)
+
+    const {chat} = message
+
+    if (data === config.callbackData.location) {
+      const servers = await entities.Server.find({ where: { active: true } })
+      if(!servers) return logger.error("Servers not found")
+
+      this.bot.deleteMessage(message.chat.id, message.message_id)
+      return this.sendLocationMessage(chat, servers)
+    }
+
+    if (data.includes(config.callbackData.create)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [_, serverName] = data.split(":")
+
+      if(serverName) this.create(from, chat, serverName, message.message_id)
+    }
+
+    if (data === config.callbackData.manual) {
+      return this.manual(chat)
+    }
+
+    if (data === config.callbackData.subscription) {
+      return this.subscription(from, chat)
+    }
+
+    if (data === config.callbackData.files) {
+      return this.files(from, chat)
+    }
+  }
+
+  private async create(from: User, chat: Chat, serverName: string, messageId: number) {
     try {
       const userId = from.id
-      const userName = from.username || userId
 
-      const serverName = "sw0"
       const server = await entities.Server.findOne({ where: { name: serverName } })
       if (!server?.ip) {
         this.log(from, `❌ Server [${serverName}] not found`)
@@ -82,16 +102,9 @@ class Telegram {
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
 
-      await this.bot.sendDocument(
-        chat.id,
-        Buffer.from(response.conf, "base64"),
-        {},
-        { filename: `fídar-vpn-${userName}.conf` }
-      )
-      await this.bot.sendPhoto(chat.id, Buffer.from(response.qr, "base64"), {}, { filename: `fídar-vpn-${userName}` })
+      await this.sendFiles(chat.id, from.username || from.id.toString(), response.conf, response.qr)
 
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
+      this.bot.deleteMessage(chat.id, messageId)
       this.sendDoneMessage(chat)
 
       this.log(from, `✅ Client created server [${serverName}]`)
@@ -107,7 +120,41 @@ class Telegram {
     this.sendManualMessage(chat)
   }
 
-  private async saveClient(from: User, chatId, serverId: number) {
+  private async subscription(from: User, chat: Chat) {
+    const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
+    if(!client?.server) return this.sendNotFoundMessage(chat)
+
+    this.sendSubscriptionMessage(chat, client?.server.label)
+  }
+
+  private async files(from: User, chat: Chat) {
+    const userId = from.id
+
+    const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
+    if(!client?.server) return this.sendNotFoundMessage(chat)
+
+    const response = await createClient(client.server.ip, userId)
+    if (!response.success || !response.already_exist) throw Error("Find already created client")
+
+      await this.sendFiles(chat.id, from.username || from.id.toString(), response.conf, response.qr)
+
+      this.sendDoneMessage(chat)
+  }
+
+  private async sendFiles(chatId: number, userName: string, conf: string, qr: string,) {
+    await this.bot.sendDocument(
+      chatId,
+      Buffer.from(conf, "base64"),
+      {},
+      { filename: `fídar-vpn-${userName}.conf` }
+    )
+    await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fídar-vpn-${userName}` })
+
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  }
+
+
+  private async saveClient(from: User, chatId: number, serverId: number) {
     const client = await entities.Client.findOne({ where: { user_id: from.id, server: { id: serverId } } })
     if (!client) {
       await entities.Client.save({
@@ -121,35 +168,40 @@ class Telegram {
     }
   }
 
+  private sendStartMessage(chat: Chat) {
+    this.sendMessage(chat, config.phrases.START_MESSAGE, config.inlineKeyboard.start)
+  }
+
+  private sendLocationMessage(chat: Chat, servers: Array<Server>) {
+    const data = servers.map(server => ({text: server.label, callback_data: `create:${server.name}`}))
+    this.sendMessage(chat, config.phrases.LOCATION_MESSAGE, [data, [{ text: "📌 Моя подписка", callback_data: config.callbackData.subscription }]])
+  }
+
   private sendDoneMessage(chat: Chat) {
-    this.bot.sendMessage(chat.id, config.phrases.DONE_MESSAGE, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: config.inlineKeyboard.done
-      }
-    })
+    this.sendMessage(chat, config.phrases.DONE_MESSAGE, config.inlineKeyboard.done)
   }
 
   private sendManualMessage(chat: Chat) {
-    this.bot.sendMessage(chat.id, config.phrases.MANUAL_MESSAGE, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: config.inlineKeyboard.manual
-      }
-    })
+    this.sendMessage(chat, config.phrases.MANUAL_MESSAGE, config.inlineKeyboard.manual)
   }
 
-  private sendStartMessage(chat: Chat) {
-    this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
-      parse_mode: "Markdown",
-      reply_markup: {
-        inline_keyboard: config.inlineKeyboard.start
-      }
-    })
+  private sendNotFoundMessage(chat: Chat) {
+    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, config.inlineKeyboard.start)
   }
 
-  private sendMessage(chat: Chat, message: string) {
-    this.bot.sendMessage(chat.id, message)
+  private sendSubscriptionMessage(chat: Chat, serverLabel: string) {
+    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}`, config.inlineKeyboard.subscription)
+  }
+
+  private sendMessage(chat: Chat, message: string, inlineKeyboard?: Array<Array<InlineKeyboardButton>>) {
+    if(!inlineKeyboard) return this.bot.sendMessage(chat.id, message)
+
+    this.bot.sendMessage(chat.id, message, {
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: inlineKeyboard
+      }
+    })
   }
 
   private log(from: User, message: string) {

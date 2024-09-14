@@ -15,7 +15,7 @@ export class Client {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column()
+  @Column({ unique: true })
   user_id: number
 
   @Column({ nullable: true })
