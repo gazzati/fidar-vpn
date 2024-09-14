@@ -41,6 +41,8 @@ class Telegram {
     switch (action) {
       case TelegramCommand.Start:
         return this.sendStartMessage(chat)
+      case TelegramCommand.Subscription:
+        return this.subscription(from, chat)
       case TelegramCommand.Manual:
         return this.manual(chat)
       case TelegramCommand.Help:
@@ -57,7 +59,7 @@ class Telegram {
     const {chat} = message
 
     if (data === config.callbackData.location) {
-      const client = await entities.Client.findOne({ where: { user_id: from.id } })
+      const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
 
       const servers = await entities.Server.find({ where: { active: true, ...(client && { id: Not(client.server.id)})  } })
       if(!servers) return logger.error("Servers not found")
