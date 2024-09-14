@@ -16,8 +16,10 @@ export class Client {
   id: number
 
   @Column()
-  @Column()
   user_id: number
+
+  @Column({ nullable: true })
+  chat_id: number
 
   @Column({ nullable: true })
   username: string

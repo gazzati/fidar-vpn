@@ -96,7 +96,7 @@ class Telegram {
 
       this.log(from, `✅ Client created server [${serverName}]`)
 
-      this.saveClient(from, server.id)
+      this.saveClient(from, chat.id, server.id)
     } catch (error: any) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
@@ -107,11 +107,12 @@ class Telegram {
     this.sendManualMessage(chat)
   }
 
-  private async saveClient(from: User, serverId: number) {
+  private async saveClient(from: User, chatId, serverId: number) {
     const client = await entities.Client.findOne({ where: { user_id: from.id, server: { id: serverId } } })
     if (!client) {
       await entities.Client.save({
         user_id: from.id,
+        chat_id: chatId,
         server: { id: serverId },
         ...(from.username && { username: from.username }),
         ...(from.first_name && { first_name: from.first_name }),
