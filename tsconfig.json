@@ -19,9 +19,9 @@
       "@root/*": ["./*"],
       "@database/*": ["./database/*"],
       "@interfaces/*": ["./interfaces/*"],
-      "@bots/*": ["./bots/*"],
+      "@api/*": ["./api/*"],
       "@helpers/*": ["./helpers/*"],
-      "@services/*": ["./services/*"]
+      "@wireguard/*": ["./wireguard/*"]
     },
     "typeRoots": ["./node_modules/@types"]
   },

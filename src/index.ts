@@ -1,8 +1,12 @@
 import "./aliases"
+import {createClient } from '@api/index';
 import TelegramBot, { type User, Chat } from "node-telegram-bot-api"
-import config from "./config"
+
+import logger from "@helpers/logger"
+
 import { TelegramCommand } from "@interfaces/telegram"
-import {newClient} from '@services/wg';
+
+import config from "./config"
 
 export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Manual, TelegramCommand.Help]
 
@@ -10,7 +14,7 @@ class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
 
   public process() {
-    this.bot.on("message", async msg => {
+    this.bot.on("message", msg => {
       const { from, chat, text } = msg
       if (!from || !text) return
 
@@ -20,18 +24,20 @@ class Telegram {
     })
 
     this.bot.on("callback_query", query => {
-        if(query.message && query.data === config.inlineKeyboard.start[0][0].callback_data) this.vpn(query.from, query.message.chat)
-        if(query.message && query.data === config.inlineKeyboard.done[0][0].callback_data) this.manual(query.message.chat)
+      if (query.message && query.data === config.inlineKeyboard.start[0][0].callback_data)
+        this.vpn(query.from, query.message.chat)
+      if (query.message && query.data === config.inlineKeyboard.done[0][0].callback_data)
+        this.manual(query.message.chat)
     })
   }
 
-  private async message(from: User, chat: Chat, message: string) {
+  private message(from: User, chat: Chat, message: string) {
     this.bot.sendChatAction(chat.id, "typing")
 
     this.log(from, `message - ${message}`)
 
     try {
-        return this.sendStartMessage(chat)
+      return this.sendStartMessage(chat)
     } catch (error) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
@@ -53,55 +59,61 @@ class Telegram {
 
   private async vpn(from: User, chat: Chat) {
     try {
-        const clientName = from.username || new Date().getTime().toString()
-        const { file, qr, alreadyExist } = await newClient(clientName)
+      const IP = '5.42.76.130'
 
-        if(alreadyExist) {
-            this.sendMessage(chat, config.phrases.ALREADY_EXIST_MESSAGE)
-            await new Promise(resolve => setTimeout(resolve, 1000))
-        }
+      const userId = from.id
+      const userName = from.username || userId
 
-        await this.bot.sendPhoto(chat.id, qr, {}, {filename: `fidar-vpn-${clientName}`})
-        await this.bot.sendDocument(chat.id, file, {}, {filename: `fidar-vpn-${clientName}`})
+      const response = await createClient(IP, userId)
+      if(!response.success) throw Error("Client creating error")
 
-        await new Promise(resolve => setTimeout(resolve, 1000))
+      if(response.already_exist) {
+          this.sendMessage(chat, config.phrases.ALREADY_EXIST_MESSAGE)
+          await new Promise(resolve => setTimeout(resolve, 1000))
+      }
 
-        this.sendDoneMessage(chat)
+      await this.bot.sendDocument(chat.id, Buffer.from(response.conf, 'base64'), {}, {filename: `fídar-vpn-${userName}.conf`})
+      await this.bot.sendPhoto(chat.id, Buffer.from(response.qr, 'base64'), {}, {filename: `fídar-vpn-${userName}`,})
+
+
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      this.sendDoneMessage(chat)
     } catch (error: any) {
-        console.error(error)
-        this.sendMessage(chat, error.message || config.phrases.ERROR_MESSAGE)
+      console.error(error)
+      this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
     }
   }
 
-  private async manual(chat: Chat) {
+  private manual(chat: Chat) {
     this.sendManualMessage(chat)
   }
 
   private sendDoneMessage(chat: Chat) {
     this.bot.sendMessage(chat.id, config.phrases.DONE_MESSAGE, {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: config.inlineKeyboard.done
-        }
-      })
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: config.inlineKeyboard.done
+      }
+    })
   }
 
   private sendManualMessage(chat: Chat) {
     this.bot.sendMessage(chat.id, config.phrases.MANUAL_MESSAGE, {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: config.inlineKeyboard.manual
-        }
-      })
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: config.inlineKeyboard.manual
+      }
+    })
   }
 
   private sendStartMessage(chat: Chat) {
     this.bot.sendMessage(chat.id, config.phrases.START_MESSAGE, {
-        parse_mode: "Markdown",
-        reply_markup: {
-          inline_keyboard: config.inlineKeyboard.start
-        }
-      })
+      parse_mode: "Markdown",
+      reply_markup: {
+        inline_keyboard: config.inlineKeyboard.start
+      }
+    })
   }
 
   private sendMessage(chat: Chat, message: string) {
@@ -109,7 +121,7 @@ class Telegram {
   }
 
   private log(from: User, message: string) {
-    console.log(from.username, message)
+    logger.debug(from.username, message)
   }
 }
 
