@@ -1,8 +1,8 @@
 import "./aliases"
-import {createClient } from '@api/index';
+import { createClient } from "@api/index"
 import TelegramBot, { type User, Chat } from "node-telegram-bot-api"
 
-import {entities} from '@root/database/data-source';
+import { entities } from "@root/database/data-source"
 
 import logger from "@helpers/logger"
 
@@ -28,8 +28,10 @@ class Telegram {
     this.bot.on("callback_query", query => {
       if (query.message && query.data === config.inlineKeyboard.start[0][0].callback_data)
         this.vpn(query.from, query.message.chat)
-      if (query.message && query.data === config.inlineKeyboard.done[0][0].callback_data)
+      if (query.message && query.data === config.inlineKeyboard.done[0][0].callback_data) {
+        this.log(query.from, `manual`)
         this.manual(query.message.chat)
+      }
     })
   }
 
@@ -66,22 +68,27 @@ class Telegram {
 
       const serverName = "sw0"
       const server = await entities.Server.findOne({ where: { name: serverName } })
-      if(!server?.ip) {
-        logger.debug(`❌ User [${userName}] server [${serverName}] - Server not found`)
+      if (!server?.ip) {
+        this.log(from, `❌ Server [${serverName}] not found`)
         this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
         return
       }
 
       const response = await createClient(server.ip, userId)
-      if(!response.success) throw Error("Client creating error")
+      if (!response.success) throw Error("Client creating error")
 
-      if(response.already_exist) {
-          this.sendMessage(chat, config.phrases.ALREADY_EXIST_MESSAGE)
-          await new Promise(resolve => setTimeout(resolve, 1000))
+      if (response.already_exist) {
+        this.sendMessage(chat, config.phrases.ALREADY_EXIST_MESSAGE)
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
 
-      await this.bot.sendDocument(chat.id, Buffer.from(response.conf, 'base64'), {}, {filename: `fídar-vpn-${userName}.conf`})
-      await this.bot.sendPhoto(chat.id, Buffer.from(response.qr, 'base64'), {}, {filename: `fídar-vpn-${userName}`,})
+      await this.bot.sendDocument(
+        chat.id,
+        Buffer.from(response.conf, "base64"),
+        {},
+        { filename: `fídar-vpn-${userName}.conf` }
+      )
+      await this.bot.sendPhoto(chat.id, Buffer.from(response.qr, "base64"), {}, { filename: `fídar-vpn-${userName}` })
 
       await new Promise(resolve => setTimeout(resolve, 1000))
 
@@ -89,13 +96,13 @@ class Telegram {
 
       await entities.Client.save({
         user_id: userId,
-        server: {id: server.id},
-        ...(from.username && {username: from.username}),
-        ...(from.first_name && {first_name: from.first_name}),
-        ...(from.last_name && {last_name: from.last_name})
+        server: { id: server.id },
+        ...(from.username && { username: from.username }),
+        ...(from.first_name && { first_name: from.first_name }),
+        ...(from.last_name && { last_name: from.last_name })
       })
 
-      logger.debug(`✅ User [${userName}] server [${serverName}]`)
+      this.log(from, `✅ Client created server [${serverName}]`)
     } catch (error: any) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
@@ -138,7 +145,13 @@ class Telegram {
   }
 
   private log(from: User, message: string) {
-    logger.debug(from.username, message)
+    const userDetails =
+      from.first_name || from.last_name
+        ? ` (${from.first_name || ""}${from.last_name ? ` ${from.last_name}` : ""})`
+        : ""
+    const user = `👨‍💻 @${from.username}${userDetails}`
+
+    logger.debug(user, message)
   }
 }
 

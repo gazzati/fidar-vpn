@@ -23,4 +23,3 @@ export const revokeClient = async (ip: string, id: number) => {
   const result = await axios.delete(`http://${ip}:${config.serversPort}/client/${id}`)
   return result
 }
-
