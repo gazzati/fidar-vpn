@@ -2,6 +2,8 @@ import "./aliases"
 import {createClient } from '@api/index';
 import TelegramBot, { type User, Chat } from "node-telegram-bot-api"
 
+import {entities} from '@root/database/data-source';
+
 import logger from "@helpers/logger"
 
 import { TelegramCommand } from "@interfaces/telegram"
@@ -59,12 +61,14 @@ class Telegram {
 
   private async vpn(from: User, chat: Chat) {
     try {
-      const IP = '5.42.76.130'
+      const serverName = "sw0"
+      const server = await entities.Server.findOne({ where: { name: serverName } })
+      if(!server?.ip) return this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
 
       const userId = from.id
       const userName = from.username || userId
 
-      const response = await createClient(IP, userId)
+      const response = await createClient(server.ip, userId)
       if(!response.success) throw Error("Client creating error")
 
       if(response.already_exist) {
@@ -79,6 +83,14 @@ class Telegram {
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       this.sendDoneMessage(chat)
+
+      await entities.Client.save({
+        user_id: userId,
+        server: {id: server.id},
+        ...(from.username && {username: from.username}),
+        ...(from.first_name && {username: from.first_name}),
+        ...(from.last_name && {username: from.last_name})
+      })
     } catch (error: any) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
