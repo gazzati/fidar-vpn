@@ -61,12 +61,16 @@ class Telegram {
 
   private async vpn(from: User, chat: Chat) {
     try {
-      const serverName = "sw0"
-      const server = await entities.Server.findOne({ where: { name: serverName } })
-      if(!server?.ip) return this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
-
       const userId = from.id
       const userName = from.username || userId
+
+      const serverName = "sw0"
+      const server = await entities.Server.findOne({ where: { name: serverName } })
+      if(!server?.ip) {
+        logger.debug(`❌ User [${userName}] server [${serverName}] - Server not found`)
+        this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
+        return
+      }
 
       const response = await createClient(server.ip, userId)
       if(!response.success) throw Error("Client creating error")
@@ -79,7 +83,6 @@ class Telegram {
       await this.bot.sendDocument(chat.id, Buffer.from(response.conf, 'base64'), {}, {filename: `fídar-vpn-${userName}.conf`})
       await this.bot.sendPhoto(chat.id, Buffer.from(response.qr, 'base64'), {}, {filename: `fídar-vpn-${userName}`,})
 
-
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       this.sendDoneMessage(chat)
@@ -88,9 +91,11 @@ class Telegram {
         user_id: userId,
         server: {id: server.id},
         ...(from.username && {username: from.username}),
-        ...(from.first_name && {username: from.first_name}),
-        ...(from.last_name && {username: from.last_name})
+        ...(from.first_name && {first_name: from.first_name}),
+        ...(from.last_name && {last_name: from.last_name})
       })
+
+      logger.debug(`✅ User [${userName}] server [${serverName}]`)
     } catch (error: any) {
       console.error(error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
