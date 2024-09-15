@@ -6,6 +6,7 @@ import { Not } from "typeorm"
 import { entities } from "@root/database/data-source"
 
 import { type Server } from "@database/entities/Server"
+import { getSubscriptionExpiredDate } from "@helpers/date"
 import { tgLogger } from "@helpers/logger"
 
 import { TelegramCommand } from "@interfaces/telegram"
@@ -141,7 +142,7 @@ class Telegram {
     const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
     if(!client?.server) return this.sendNotFoundMessage(chat)
 
-    this.sendSubscriptionMessage(chat, client?.server.label)
+    this.sendSubscriptionMessage(chat, client?.server.label, client.expired_at)
   }
 
   private async files(from: User, chat: Chat) {
@@ -210,8 +211,10 @@ class Telegram {
     this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, config.inlineKeyboard.start)
   }
 
-  private sendSubscriptionMessage(chat: Chat, serverLabel: string) {
-    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}`, config.inlineKeyboard.subscription)
+  private sendSubscriptionMessage(chat: Chat, serverLabel: string, expiredAt: Date) {
+    const paidUntil = getSubscriptionExpiredDate(expiredAt)
+
+    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}\n\n💵 Оплачено до: ${paidUntil}`, config.inlineKeyboard.subscription)
   }
 
   private sendMessage(chat: Chat, message: string, inlineKeyboard?: Array<Array<InlineKeyboardButton>>) {

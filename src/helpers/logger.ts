@@ -12,7 +12,7 @@ enum Color {
   DarkBlue = "\x1b[94m"
 }
 
-const padZeros = (value: string | number): string => {
+const padZeros = (value: number): string => {
   if (value.toString().length < 2) {
     const zeros = 2 - value.toString().length
     const str = new Array(zeros).fill(0)
