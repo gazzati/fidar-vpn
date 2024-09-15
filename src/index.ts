@@ -5,7 +5,8 @@ import { Not } from "typeorm"
 
 import { entities } from "@root/database/data-source"
 
-import { type Server } from "@database/entities/Server"
+import { type Client } from "@database/entities/Client"
+import { Server } from "@database/entities/Server"
 import { getSubscriptionExpiredDate } from "@helpers/date"
 import { tgLogger } from "@helpers/logger"
 
@@ -13,7 +14,7 @@ import { TelegramCommand } from "@interfaces/telegram"
 
 import config from "./config"
 
-export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Subscription, TelegramCommand.Manual, TelegramCommand.Help]
+export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Subscription, TelegramCommand.Pay, TelegramCommand.Manual, TelegramCommand.Help]
 
 class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
@@ -41,13 +42,15 @@ class Telegram {
 
     switch (action) {
       case TelegramCommand.Start:
-        return this.sendStartMessage(chat)
+        return this.sendStartMessage(from, chat)
       case TelegramCommand.Subscription:
         return this.subscription(from, chat)
+      case TelegramCommand.Pay:
+        return this.sendPayMessage(from, chat)
       case TelegramCommand.Manual:
-        return this.manual(chat)
+        return this.sendManualMessage(chat)
       case TelegramCommand.Help:
-        return this.sendMessage(chat, config.phrases.HELP_MESSAGE)
+        return this.sendHelpMessage(chat)
     }
   }
 
@@ -60,7 +63,7 @@ class Telegram {
     const {chat} = message
 
     if (data === config.callbackData.location) {
-      const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
+      const client = await this.getClientWithServer(from)
 
       const servers = await entities.Server.find({ where: { active: true, ...(client && { id: Not(client.server.id)})  } })
       if(!servers) return tgLogger.error(from, "Servers not found")
@@ -72,37 +75,35 @@ class Telegram {
     if (data.includes(config.callbackData.create)) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, serverName] = data.split(":")
+      if(!serverName) return tgLogger.error(from, "Servers not found")
 
-      if(serverName) this.create(from, chat, serverName, message.message_id)
+
+      return this.create(from, chat, serverName, message.message_id)
     }
 
-    if (data === config.callbackData.manual) {
-      return this.manual(chat)
+    if (data === config.callbackData.start) {
+      this.bot.deleteMessage(message.chat.id, message.message_id)
+      return this.sendStartMessage(from, chat)
     }
 
-    if (data === config.callbackData.subscription) {
-      return this.subscription(from, chat)
-    }
-
-    if (data === config.callbackData.files) {
-      return this.files(from, chat)
-    }
+    if (data === config.callbackData.manual) return this.sendManualMessage(chat)
+    if (data === config.callbackData.subscription) return this.subscription(from, chat)
+    if (data === config.callbackData.files) return this.files(from, chat)
+    if (data === config.callbackData.support) return this.sendHelpMessage(chat)
   }
 
   private async create(from: User, chat: Chat, serverName: string, messageId: number) {
     try {
       const userId = from.id
 
-      const client = await entities.Client.findOne({ where: { user_id: userId }, relations: { server: true } })
-      if(client?.server) {
-        const response = await revokeClient(client.server.ip, userId)
-        if(!response?.success) {
-          tgLogger.log(from, `❌ Error with client [${client.id}] deleting from [${serverName}]`)
-          this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
+      const client = await this.getClientWithServer(from)
+      if(client) {
+        const expired = new Date() > new Date(client.expired_at)
+        if(expired) {
+          tgLogger.log(from, `💵 Not paid`)
+          this.sendNeedPayMessage(chat)
           return
         }
-
-        await entities.Client.delete({ user_id: userId })
       }
 
       const server = await entities.Server.findOne({ where: { name: serverName } })
@@ -127,19 +128,55 @@ class Telegram {
 
       tgLogger.log(from, `✅ Client created server [${serverName}]`)
 
-      this.saveClient(from, chat.id, server.id)
+      if(client?.server) {
+        const response = await revokeClient(client.server.ip, userId)
+        if(!response?.success) {
+          tgLogger.log(from, `❌ Error with client [${client.id}] deleting from [${serverName}]`)
+          this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
+          return
+        }
+      }
+
+      if (!client) {
+        const expiredAt = new Date()
+        expiredAt.setMonth(expiredAt.getMonth() + 1)
+
+        await entities.Client.save({
+          user_id: from.id,
+          chat_id: chat.id,
+          server: { id: server.id },
+          expired_at: expiredAt,
+          ...(from.username && { username: from.username }),
+          ...(from.first_name && { first_name: from.first_name }),
+          ...(from.last_name && { last_name: from.last_name })
+        })
+
+        return
+      }
+
+      entities.Client.update({user_id: from.id}, {
+        server: {id: server.id},
+        ...(from.username && { username: from.username }),
+        ...(from.first_name && { first_name: from.first_name }),
+        ...(from.last_name && { last_name: from.last_name })
+
+      })
+
     } catch (error: any) {
       tgLogger.error(from, error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
     }
   }
 
-  private manual(chat: Chat) {
-    this.sendManualMessage(chat)
+  private async subscription(from: User, chat: Chat) {
+    const client =await this.getClientWithServer(from)
+    if(!client?.server) return this.sendNotFoundMessage(chat)
+
+    this.sendSubscriptionMessage(chat, client?.server.label, client.expired_at)
   }
 
-  private async subscription(from: User, chat: Chat) {
-    const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
+  private async pay(from: User, chat: Chat) {
+    const client = await this.getClientWithServer(from)
     if(!client?.server) return this.sendNotFoundMessage(chat)
 
     this.sendSubscriptionMessage(chat, client?.server.label, client.expired_at)
@@ -148,7 +185,7 @@ class Telegram {
   private async files(from: User, chat: Chat) {
     const userId = from.id
 
-    const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
+    const client = await this.getClientWithServer(from)
     if(!client?.server) return this.sendNotFoundMessage(chat)
 
     const response = await createClient(client.server.ip, userId)
@@ -171,50 +208,53 @@ class Telegram {
     await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
+  private async sendStartMessage(from: User, chat: Chat) {
+    const client = await this.getClient(from)
 
-  private async saveClient(from: User, chatId: number, serverId: number) {
-    const client = await entities.Client.findOne({ where: { user_id: from.id, server: { id: serverId } } })
-    if (!client) {
-      const date = new Date()
-      date.setMonth(date.getMonth() + 3)
+    const inlineKeyboard = [
+      !client ? config.inlineKeyboardItem.trial : config.inlineKeyboardItem.subscription,
+      config.inlineKeyboardItem.support,
+    ]
 
-      await entities.Client.save({
-        user_id: from.id,
-        chat_id: chatId,
-        server: { id: serverId },
-        expired_at: date,
-        ...(from.username && { username: from.username }),
-        ...(from.first_name && { first_name: from.first_name }),
-        ...(from.last_name && { last_name: from.last_name })
-      })
-    }
-  }
-
-  private sendStartMessage(chat: Chat) {
-    this.sendMessage(chat, config.phrases.START_MESSAGE, config.inlineKeyboard.start)
+    this.sendMessage(chat, config.phrases.START_MESSAGE, inlineKeyboard)
   }
 
   private sendLocationMessage(chat: Chat, servers: Array<Server>, exist: boolean) {
     const data = servers.map(server => ({text: server.label, callback_data: `create:${server.name}`}))
-    this.sendMessage(chat, exist ? config.phrases.LOCATION_WITH_EXIST_MESSAGE : config.phrases.LOCATION_MESSAGE, [data, [{ text: "📌 Моя подписка", callback_data: config.callbackData.subscription }]])
+    this.sendMessage(chat, exist ? config.phrases.LOCATION_WITH_EXIST_MESSAGE : config.phrases.LOCATION_MESSAGE, [data, exist ? config.inlineKeyboardItem.subscription : []])
   }
 
   private sendDoneMessage(chat: Chat) {
     this.sendMessage(chat, config.phrases.DONE_MESSAGE, config.inlineKeyboard.done)
   }
 
+  private async sendPayMessage(from: User, chat: Chat) {
+    const client = await this.getClient(from)
+    if(!client) return  this.sendMessage(chat, config.phrases.PAY_NEW_USER_MESSAGE, [config.inlineKeyboardItem.main])
+
+    this.sendMessage(chat, config.phrases.PAY_MESSAGE, [...config.inlineKeyboard.tariffs, config.inlineKeyboardItem.subscription])
+  }
+
   private sendManualMessage(chat: Chat) {
     this.sendMessage(chat, config.phrases.MANUAL_MESSAGE, config.inlineKeyboard.manual)
   }
 
+  private sendHelpMessage(chat: Chat) {
+    this.sendMessage(chat, config.phrases.HELP_MESSAGE)
+  }
+
   private sendNotFoundMessage(chat: Chat) {
-    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, config.inlineKeyboard.start)
+    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, [config.inlineKeyboardItem.main])
+  }
+
+  private sendNeedPayMessage(chat: Chat) {
+    this.sendMessage(chat, config.phrases.NEED_PAY_MESSAGE, [config.inlineKeyboardItem.pay])
   }
 
   private sendSubscriptionMessage(chat: Chat, serverLabel: string, expiredAt: Date) {
     const paidUntil = getSubscriptionExpiredDate(expiredAt)
 
-    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}\n💵└ Оплачено до: ${paidUntil}`, config.inlineKeyboard.subscription)
+    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}\n💵└ Оплачено до: ${paidUntil || '-'}`, config.inlineKeyboard.subscription)
   }
 
   private sendMessage(chat: Chat, message: string, inlineKeyboard?: Array<Array<InlineKeyboardButton>>) {
@@ -226,6 +266,14 @@ class Telegram {
         inline_keyboard: inlineKeyboard
       }
     })
+  }
+
+  private getClient(from: User): Promise<Client | null> {
+    return entities.Client.findOne({ where: { user_id: from.id } })
+  }
+
+  private getClientWithServer(from: User): Promise<Client | null> {
+    return entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
   }
 }
 
