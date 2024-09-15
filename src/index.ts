@@ -14,7 +14,7 @@ import { TelegramCommand } from "@interfaces/telegram"
 
 import config from "./config"
 
-export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Subscription, TelegramCommand.Pay, TelegramCommand.Manual, TelegramCommand.Help]
+export const COMMANDS: Array<string> = [TelegramCommand.Start, TelegramCommand.Subscription, TelegramCommand.Pay, TelegramCommand.Help]
 
 class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
@@ -47,8 +47,6 @@ class Telegram {
         return this.subscription(from, chat)
       case TelegramCommand.Pay:
         return this.sendPayMessage(from, chat)
-      case TelegramCommand.Manual:
-        return this.sendManualMessage(chat)
       case TelegramCommand.Help:
         return this.sendHelpMessage(chat)
     }
@@ -225,7 +223,7 @@ class Telegram {
   }
 
   private sendDoneMessage(chat: Chat) {
-    this.sendMessage(chat, config.phrases.DONE_MESSAGE, config.inlineKeyboard.done)
+    this.sendMessage(chat, config.phrases.DONE_MESSAGE, config.inlineKeyboard.manual)
   }
 
   private async sendPayMessage(from: User, chat: Chat) {
@@ -254,7 +252,12 @@ class Telegram {
   private sendSubscriptionMessage(chat: Chat, serverLabel: string, expiredAt: Date) {
     const paidUntil = getSubscriptionExpiredDate(expiredAt)
 
-    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}\n💵└ Оплачено до: ${paidUntil || '-'}`, config.inlineKeyboard.subscription)
+    const inlineKeyboard = [
+      config.inlineKeyboardItem.pay,
+      config.inlineKeyboardItem.location,
+      config.inlineKeyboardItem.files,
+    ]
+    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}\n💵└ Оплачено до: ${paidUntil || '-'}`, inlineKeyboard)
   }
 
   private sendMessage(chat: Chat, message: string, inlineKeyboard?: Array<Array<InlineKeyboardButton>>) {

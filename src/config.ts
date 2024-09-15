@@ -40,7 +40,7 @@ export default {
   serversPort: 3003,
 
   phrases: {
-    START_MESSAGE: "*Добро пожаловать в FídarVPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой и SberPay",
+    START_MESSAGE: "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой и SberPay",
     LOCATION_MESSAGE: "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n",
     LOCATION_WITH_EXIST_MESSAGE: "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n⚠️ Обратите внимание, после изменения локации предыдущий файл подключения свою работу прекращает",
     HELP_MESSAGE: "По всем вопросам пиши @gazzati",
@@ -66,14 +66,12 @@ export default {
     trial: [{ text: "🎁 Пробная подписка", callback_data: callbackData.location }],
     pay: [{ text: "💵 Оплатить", callback_data: callbackData.pay }],
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],
+    files: [{ text: "💾 Скачать данные для подключения", callback_data: callbackData.files }],
+    location: [{ text: "📍 Сменить локацию", callback_data: callbackData.location }],
+    manual: [{ text: "📝 Инструкция", callback_data: callbackData.manual }],
   },
 
   inlineKeyboard: {
-    done: [[{ text: "📝 Инструкция", callback_data: callbackData.manual }]],
-    subscription: [
-      [{ text: "💾 Скачать данные для подключения", callback_data: callbackData.files }],
-      [{ text: "📍 Сменить локацию", callback_data: callbackData.location }]
-    ],
     manual: [
       [
         { text: "📲 Iphone", url: "https://itunes.apple.com/us/app/wireguard/id1441195209?ls=1&mt=8" },
