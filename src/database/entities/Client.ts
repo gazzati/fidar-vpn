@@ -37,6 +37,9 @@ export class Client {
   server: Server
 
   @Column()
+  expired_at: Date
+
+  @Column()
   @CreateDateColumn()
   created_at: Date
 

@@ -6,7 +6,7 @@ import { Not } from "typeorm"
 import { entities } from "@root/database/data-source"
 
 import { type Server } from "@database/entities/Server"
-import logger from "@helpers/logger"
+import { tgLogger } from "@helpers/logger"
 
 import { TelegramCommand } from "@interfaces/telegram"
 
@@ -32,11 +32,11 @@ class Telegram {
 
   private message(from: User, chat: Chat, message: string) {
     this.bot.sendChatAction(chat.id, "typing")
-    this.log(from, `message - ${message}`)
+    tgLogger.log(from, `📩 Message ${message}`)
   }
 
   private commands(from: User, chat: Chat, action: string) {
-    this.log(from, `📋 command - ${action}`)
+    tgLogger.log(from, `📋 Command ${action}`)
 
     switch (action) {
       case TelegramCommand.Start:
@@ -54,7 +54,7 @@ class Telegram {
     const {message, data, from} = query
     if(!message || !data || !from) return
 
-    this.log(from, `🤙 callback query - ${data}`)
+    tgLogger.log(from, `🤙 Callback query ${data}`)
 
     const {chat} = message
 
@@ -62,7 +62,7 @@ class Telegram {
       const client = await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
 
       const servers = await entities.Server.find({ where: { active: true, ...(client && { id: Not(client.server.id)})  } })
-      if(!servers) return logger.error("Servers not found")
+      if(!servers) return tgLogger.error(from, "Servers not found")
 
       this.bot.deleteMessage(message.chat.id, message.message_id)
       return this.sendLocationMessage(chat, servers, !!client)
@@ -96,7 +96,7 @@ class Telegram {
       if(client?.server) {
         const response = await revokeClient(client.server.ip, userId)
         if(!response?.success) {
-          this.log(from, `❌ Error with client [${client.id}] deleting from [${serverName}]`)
+          tgLogger.log(from, `❌ Error with client [${client.id}] deleting from [${serverName}]`)
           this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
           return
         }
@@ -106,7 +106,7 @@ class Telegram {
 
       const server = await entities.Server.findOne({ where: { name: serverName } })
       if (!server?.ip) {
-        this.log(from, `❌ Server [${serverName}] not found`)
+        tgLogger.log(from, `❌ Server [${serverName}] not found`)
         this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
         return
       }
@@ -124,11 +124,11 @@ class Telegram {
       this.bot.deleteMessage(chat.id, messageId)
       this.sendDoneMessage(chat)
 
-      this.log(from, `✅ Client created server [${serverName}]`)
+      tgLogger.log(from, `✅ Client created server [${serverName}]`)
 
       this.saveClient(from, chat.id, server.id)
     } catch (error: any) {
-      console.error(error)
+      tgLogger.error(from, error)
       this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
     }
   }
@@ -174,10 +174,14 @@ class Telegram {
   private async saveClient(from: User, chatId: number, serverId: number) {
     const client = await entities.Client.findOne({ where: { user_id: from.id, server: { id: serverId } } })
     if (!client) {
+      const date = new Date()
+      date.setMonth(date.getMonth() + 3)
+
       await entities.Client.save({
         user_id: from.id,
         chat_id: chatId,
         server: { id: serverId },
+        expired_at: date,
         ...(from.username && { username: from.username }),
         ...(from.first_name && { first_name: from.first_name }),
         ...(from.last_name && { last_name: from.last_name })
@@ -219,16 +223,6 @@ class Telegram {
         inline_keyboard: inlineKeyboard
       }
     })
-  }
-
-  private log(from: User, message: string) {
-    const userDetails =
-      from.first_name || from.last_name
-        ? ` (${from.first_name || ""}${from.last_name ? ` ${from.last_name}` : ""})`
-        : ""
-    const user = `👨‍💻 @${from.username}${userDetails}`
-
-    logger.debug(user, message)
   }
 }
 

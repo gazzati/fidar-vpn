@@ -21,7 +21,7 @@ export const AppDataSource = new DataSource({
 })
 
 AppDataSource.initialize()
-  .then(() => logger.debug(`Connected to the database: ${config.psqlDatabase} \n`))
+  .then(() => logger.debug(`💾 Connected to the database: ${config.psqlDatabase} \n`))
   .catch(error => console.error(error))
 
 export const entities = {
