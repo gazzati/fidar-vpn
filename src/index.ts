@@ -214,7 +214,7 @@ class Telegram {
   private sendSubscriptionMessage(chat: Chat, serverLabel: string, expiredAt: Date) {
     const paidUntil = getSubscriptionExpiredDate(expiredAt)
 
-    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}\n\n💵 Оплачено до: ${paidUntil}`, config.inlineKeyboard.subscription)
+    this.sendMessage(chat, `${config.phrases.SUBSCRIPTION_MESSAGE} ${serverLabel}\n\n💵└ Оплачено до: ${paidUntil}`, config.inlineKeyboard.subscription)
   }
 
   private sendMessage(chat: Chat, message: string, inlineKeyboard?: Array<Array<InlineKeyboardButton>>) {
