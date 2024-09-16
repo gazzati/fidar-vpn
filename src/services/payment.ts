@@ -52,9 +52,9 @@ class PaymentService {
     const months = getTariffMonths(tariff)
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
 
-    this.db.updateClientExpiredAt(from, newExpiredAt)
+    this.db.updateClientExpiredAt(from, newExpiredAt.toDateString())
 
-    const paidUntil = getSubscriptionExpiredDate(client.expired_at)
+    const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
     this.messages.sendSuccessfulPayment(chat, paidUntil)
 

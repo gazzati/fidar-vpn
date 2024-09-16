@@ -39,7 +39,7 @@ class DbService {
     )
   }
 
-  public updateClientExpiredAt(from: User, expiredAt: Date) {
+  public updateClientExpiredAt(from: User, expiredAt: string) {
     entities.Client.update(
       { user_id: from.id },
       {
