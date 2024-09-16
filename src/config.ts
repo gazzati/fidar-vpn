@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import Joi from "joi"
 
-import {PayTariff, TariffName} from '@interfaces/pay';
+import { PayTariff, TariffName } from "@interfaces/pay"
 
 dotenv.config()
 
@@ -20,17 +20,17 @@ const envVarsSchema = Joi.object({
 const { error, value: envVars } = envVarsSchema.validate(process.env)
 if (error) new Error(`Config validation error: ${error.message}`)
 
- const callbackData = {
-  start: 'start',
-  create: 'create',
-  manual: 'manual',
-  files: 'files',
-  location: 'location',
-  subscription: 'subscription',
-  pay: 'pay',
-  tariff: 'tariff',
-  support: 'support',
- }
+const callbackData = {
+  start: "start",
+  create: "create",
+  manual: "manual",
+  files: "files",
+  location: "location",
+  subscription: "subscription",
+  pay: "pay",
+  tariff: "tariff",
+  support: "support"
+}
 
 export default {
   telegramToken: envVars.TELEGRAM_TOKEN,
@@ -46,9 +46,11 @@ export default {
   serversPort: 3003,
 
   phrases: {
-    START_MESSAGE: "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой и SberPay",
+    START_MESSAGE:
+      "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой и SberPay",
     LOCATION_MESSAGE: "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n",
-    LOCATION_WITH_EXIST_MESSAGE: "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n⚠️ Обратите внимание, после изменения локации предыдущий файл подключения свою работу прекращает",
+    LOCATION_WITH_EXIST_MESSAGE:
+      "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n⚠️ Обратите внимание, после изменения локации предыдущий файл подключения свою работу прекращает",
     HELP_MESSAGE: "По всем вопросам пиши @gazzati",
     ERROR_MESSAGE: "🤷‍♂️ Что то пошло не так, попробуйте повторить позже",
     SERVER_ERROR_MESSAGE: "Данный сервер неисправен, попробуй другой",
@@ -65,7 +67,6 @@ export default {
       "⚙️ Инструкция по установке: \n\n1️⃣ Установите приложение WireGuard по ссылке ниже\n\n2️⃣ Импортируйте полученный файл в приложение WireGuard либо отсканируйте QR \n\n3️⃣ Для включения/отключения VPN активируйте добавленное подключение\n\n"
   },
 
-
   callbackData,
 
   inlineKeyboardItem: {
@@ -76,7 +77,7 @@ export default {
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],
     files: [{ text: "💾 Скачать данные для подключения", callback_data: callbackData.files }],
     location: [{ text: "📍 Сменить локацию", callback_data: callbackData.location }],
-    manual: [{ text: "📝 Инструкция", callback_data: callbackData.manual }],
+    manual: [{ text: "📝 Инструкция", callback_data: callbackData.manual }]
   },
 
   inlineKeyboard: {
@@ -93,9 +94,19 @@ export default {
     ],
 
     tariffs: [
-      [{ text: `${PayTariff.Month}₽ - ${TariffName.Month}`, callback_data: `${callbackData.tariff}:${PayTariff.Month}` }],
-      [{ text: `${PayTariff.Month3}₽ - ${TariffName.Month3}`, callback_data: `${callbackData.tariff}:${PayTariff.Month3}` }],
-      [{ text: `${PayTariff.Year}₽ - ${TariffName.Year}`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }],
-    ],
+      [
+        {
+          text: `${PayTariff.Month}₽ - ${TariffName.Month}`,
+          callback_data: `${callbackData.tariff}:${PayTariff.Month}`
+        }
+      ],
+      [
+        {
+          text: `${PayTariff.Month3}₽ - ${TariffName.Month3}`,
+          callback_data: `${callbackData.tariff}:${PayTariff.Month3}`
+        }
+      ],
+      [{ text: `${PayTariff.Year}₽ - ${TariffName.Year}`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }]
+    ]
   }
 }
