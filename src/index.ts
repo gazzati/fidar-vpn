@@ -1,15 +1,16 @@
 import "./aliases"
 import { createClient, revokeClient } from "@api/index"
-import TelegramBot, { type User, Chat, CallbackQuery, InlineKeyboardButton } from "node-telegram-bot-api"
+import TelegramBot, { type User, Chat, CallbackQuery, InlineKeyboardButton, PreCheckoutQuery, Message } from "node-telegram-bot-api"
 import { Not } from "typeorm"
 
-import { entities } from "@root/database/data-source"
-
+import { entities } from "@database/data-source"
 import { type Client } from "@database/entities/Client"
 import { Server } from "@database/entities/Server"
 import { getSubscriptionExpiredDate } from "@helpers/date"
 import { tgLogger } from "@helpers/logger"
+import {getTariffName, getTariffMonths} from '@helpers/tariff';
 
+import {PayTariff} from '@interfaces/pay';
 import { TelegramCommand } from "@interfaces/telegram"
 
 import config from "./config"
@@ -30,6 +31,8 @@ class Telegram {
     })
 
     this.bot.on("callback_query", query => this.callbackQuery(query))
+    this.bot.on("pre_checkout_query", query => this.preCheckoutQuery(query))
+    this.bot.on("successful_payment", message => this.successfulPayment(message))
   }
 
   private message(from: User, chat: Chat, message: string) {
@@ -66,8 +69,8 @@ class Telegram {
       const servers = await entities.Server.find({ where: { active: true, ...(client && { id: Not(client.server.id)})  } })
       if(!servers) return tgLogger.error(from, "Servers not found")
 
-      this.bot.deleteMessage(message.chat.id, message.message_id)
-      return this.sendLocationMessage(chat, servers, !!client)
+      this.sendLocationMessage(chat, servers, !!client)
+      return this.bot.deleteMessage(message.chat.id, message.message_id)
     }
 
     if (data.includes(config.callbackData.create)) {
@@ -75,19 +78,45 @@ class Telegram {
       const [_, serverName] = data.split(":")
       if(!serverName) return tgLogger.error(from, "Servers not found")
 
-
       return this.create(from, chat, serverName, message.message_id)
     }
 
+    if (data.includes(config.callbackData.tariff)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const [_, tariff ] = data.split(":") as [any, PayTariff]
+      if(!tariff) return tgLogger.error(from, "Tariff not found")
+
+      await this.invoice(from, chat, Number(tariff))
+      return this.bot.deleteMessage(message.chat.id, message.message_id)
+    }
+
     if (data === config.callbackData.start) {
-      this.bot.deleteMessage(message.chat.id, message.message_id)
-      return this.sendStartMessage(from, chat)
+      await this.sendStartMessage(from, chat)
+      return this.bot.deleteMessage(message.chat.id, message.message_id)
     }
 
     if (data === config.callbackData.manual) return this.sendManualMessage(chat)
+    if (data === config.callbackData.pay) return this.sendPayMessage(from, chat)
     if (data === config.callbackData.subscription) return this.subscription(from, chat)
     if (data === config.callbackData.files) return this.files(from, chat)
     if (data === config.callbackData.support) return this.sendHelpMessage(chat)
+  }
+
+  private async preCheckoutQuery(query: PreCheckoutQuery) {
+    const {from} = query
+
+    const client = await this.getClient(from)
+    if(!client) {
+      tgLogger.log(from, `❌ Client ${from.id} not found`)
+      return  await this.bot.answerPreCheckoutQuery(query.id, false, {error_message: config.phrases.FAILED_PAYMENT_MESSAGE})
+    }
+
+    return await this.bot.answerPreCheckoutQuery(query.id, true)
+  }
+
+  private successfulPayment(message: Message) {
+    this.sendSuccessfulPaymentMessage(message.chat)
+    if(message.from) tgLogger.log(message.from, `🔥 Successful payment [${message.successful_payment?.invoice_payload}]`)
   }
 
   private async create(from: User, chat: Chat, serverName: string, messageId: number) {
@@ -166,14 +195,32 @@ class Telegram {
     }
   }
 
-  private async subscription(from: User, chat: Chat) {
-    const client =await this.getClientWithServer(from)
-    if(!client?.server) return this.sendNotFoundMessage(chat)
+  private async invoice(from: User, chat: Chat, tariff: PayTariff) {
+    const client = await this.getClient(from)
+    if(!client) {
+      tgLogger.log(from, `❌ Client ${from.id} not found`)
+      this.sendMessage(chat, config.phrases.SERVER_ERROR_MESSAGE)
+      return
+    }
 
-    this.sendSubscriptionMessage(chat, client?.server.label, client.expired_at)
+    const tariffName = getTariffName(tariff)
+    const months = getTariffMonths(tariff)
+
+    const expiredAt = new Date(client.expired_at)
+    const paidUntil = getSubscriptionExpiredDate(new Date(expiredAt.setMonth(expiredAt.getMonth() + months)))
+
+    await this.bot.sendInvoice(
+      chat.id,
+      'Оплата подписки\n\n',
+      `\n\nПродление на ${tariffName}. Ваша подписка будет продлена до ${paidUntil}`,
+      tariffName,
+      config.providerToken,
+      config.currency,
+      [{label: tariffName, amount: tariff * 100}]
+    )
   }
 
-  private async pay(from: User, chat: Chat) {
+  private async subscription(from: User, chat: Chat) {
     const client = await this.getClientWithServer(from)
     if(!client?.server) return this.sendNotFoundMessage(chat)
 
@@ -247,6 +294,10 @@ class Telegram {
 
   private sendNeedPayMessage(chat: Chat) {
     this.sendMessage(chat, config.phrases.NEED_PAY_MESSAGE, [config.inlineKeyboardItem.pay])
+  }
+
+  private sendSuccessfulPaymentMessage(chat: Chat) {
+    this.sendMessage(chat, config.phrases.SUCCESSFUL_PAYMENT_MESSAGE, [config.inlineKeyboardItem.subscription])
   }
 
   private sendSubscriptionMessage(chat: Chat, serverLabel: string, expiredAt: Date) {

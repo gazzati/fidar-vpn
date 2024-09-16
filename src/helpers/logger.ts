@@ -34,7 +34,7 @@ const logger = {
     const dateLog = getLogDate()
 
     // eslint-disable-next-line no-console
-    console.log(`${Color.Cyan}${dateLog} ${Color.Green}`, ...args)
+    console.log(`${Color.Cyan}${dateLog}${Color.Green}`, ...args)
   },
 
   error(message: any) {

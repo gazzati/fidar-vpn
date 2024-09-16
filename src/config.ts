@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import Joi from "joi"
 
-import {PayTariff} from '@interfaces/pay';
+import {PayTariff, TariffName} from '@interfaces/pay';
 
 dotenv.config()
 
@@ -11,7 +11,10 @@ const envVarsSchema = Joi.object({
   PSQL_HOST: Joi.string().default("localhost").description("Database Host"),
   PSQL_DATABASE: Joi.string().default("database").description("Database Name"),
   PSQL_USER: Joi.string().default("root").description("Database User"),
-  PSQL_PASSWORD: Joi.string().allow("").default("root").description("Database Password")
+  PSQL_PASSWORD: Joi.string().allow("").default("root").description("Database Password"),
+
+  PROVIDER_TOKEN: Joi.string().allow("").default("").description("Provider token"),
+  CURRENCY: Joi.string().allow("").default("RUB").description("Currency")
 })
 
 const { error, value: envVars } = envVarsSchema.validate(process.env)
@@ -37,6 +40,9 @@ export default {
   psqlUsername: envVars.PSQL_USER,
   psqlPassword: envVars.PSQL_PASSWORD,
 
+  providerToken: envVars.PROVIDER_TOKEN,
+  currency: envVars.CURRENCY,
+
   serversPort: 3003,
 
   phrases: {
@@ -53,6 +59,8 @@ export default {
     PAY_MESSAGE: "💵 Выберите сумму для пополнения: \n\nОплата возможна Банковской картой и SberPay",
     PAY_NEW_USER_MESSAGE: "🫶 Мы ценим наших клиентов и поэтому рекомендуем сначала воспользоваться бесплатным периодом",
     NEED_PAY_MESSAGE: "💵 Необходимо произвести оплату",
+    SUCCESSFUL_PAYMENT_MESSAGE: "👍 Оплата прошла успешно",
+    FAILED_PAYMENT_MESSAGE: "😢 Извините, что то пошло не так. Попробуйте позже",
     MANUAL_MESSAGE:
       "⚙️ Инструкция по установке: \n\n1️⃣ Установите приложение WireGuard по ссылке ниже\n\n2️⃣ Импортируйте полученный файл в приложение WireGuard либо отсканируйте QR \n\n3️⃣ Для включения/отключения VPN активируйте добавленное подключение\n\n"
   },
@@ -85,9 +93,9 @@ export default {
     ],
 
     tariffs: [
-      [{ text: `${PayTariff.Month}₽ - 1 Месяц`, callback_data: `${callbackData.tariff}:${PayTariff.Month}` }],
-      [{ text: `${PayTariff.Month3}₽ - 3 Месяца`, callback_data: `${callbackData.tariff}:${PayTariff.Month3}` }],
-      [{ text: `${PayTariff.Year}₽ - 1 Год`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }],
+      [{ text: `${PayTariff.Month}₽ - ${TariffName.Month}`, callback_data: `${callbackData.tariff}:${PayTariff.Month}` }],
+      [{ text: `${PayTariff.Month3}₽ - ${TariffName.Month3}`, callback_data: `${callbackData.tariff}:${PayTariff.Month3}` }],
+      [{ text: `${PayTariff.Year}₽ - ${TariffName.Year}`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }],
     ],
   }
 }
