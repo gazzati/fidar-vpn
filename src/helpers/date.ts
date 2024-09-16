@@ -51,5 +51,5 @@ export const getTrialExpiredAt = (): Date => {
 }
 
 export const dbDate = (date: Date) => {
-  return '2022-09-02 21:40:50'
+  return date.toISOString().slice(0, 19).replace('T', ' ')
 }
