@@ -4,7 +4,7 @@ import config from "@root/config"
 
 import { type Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt } from "@helpers/date"
-import { tgLogger } from "@helpers/logger"
+import logger, { tgLogger } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
 
 import { PayTariff } from "@interfaces/pay"
@@ -29,11 +29,36 @@ class PaymentService {
     return await this.bot.answerPreCheckoutQuery(query.id, true)
   }
 
-  public successfulPayment(message: Message) {
-    this.messages.sendSuccessfulPayment(message.chat)
+  public async successfulPayment(message: Message) {
+    const { from, chat } = message
 
-    if (message.from)
-      tgLogger.log(message.from, `🔥 Successful payment [${message.successful_payment?.invoice_payload}]`)
+    if(!from) {
+      logger.error("[from] is required", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    const tariff = message.successful_payment?.total_amount
+    if(!tariff) {
+      tgLogger.error(from, "[tariff] is required")
+      return this.messages.sendServerError(chat)
+    }
+
+    const client = await this.db.getClient(from)
+    if(!client) {
+      logger.error("Client not found", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    const months = getTariffMonths(tariff)
+    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
+
+    this.db.updateClientExpiredAt(from, newExpiredAt)
+
+    const paidUntil = getSubscriptionExpiredDate(client.expired_at)
+
+    this.messages.sendSuccessfulPayment(chat, paidUntil)
+
+    tgLogger.log(from, `🔥 Successful payment amount: [${tariff}]`)
   }
 
   public async invoice(chat: Chat, client: Client, tariff: PayTariff) {

@@ -68,8 +68,8 @@ class MessageService {
     this.sendMessage(chat, config.phrases.NEED_PAY_MESSAGE, [config.inlineKeyboardItem.pay])
   }
 
-  public sendSuccessfulPayment(chat: Chat) {
-    this.sendMessage(chat, config.phrases.SUCCESSFUL_PAYMENT_MESSAGE, [config.inlineKeyboardItem.subscription])
+  public sendSuccessfulPayment(chat: Chat, paidUntil: string | null) {
+    this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PAYMENT_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [config.inlineKeyboardItem.subscription, config.inlineKeyboardItem.main])
   }
 
   public sendAlreadyExistError(chat: Chat) {

@@ -18,7 +18,7 @@ export class Client {
   @Column({ unique: true, type: "bigint" })
   user_id: number
 
-  @Column({ nullable: true, type: "bigint" })
+  @Column({ type: "bigint" })
   chat_id: number
 
   @Column({ nullable: true })
@@ -38,6 +38,9 @@ export class Client {
 
   @Column()
   expired_at: Date
+
+  @Column({ default: false })
+  trial_used: boolean
 
   @Column()
   @CreateDateColumn()

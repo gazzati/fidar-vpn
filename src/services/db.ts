@@ -27,7 +27,7 @@ class DbService {
     })
   }
 
-  public updateClient(from: User, serverId: number) {
+  public updateClientServer(from: User, serverId: number) {
     entities.Client.update(
       { user_id: from.id },
       {
@@ -35,6 +35,16 @@ class DbService {
         ...(from.username && { username: from.username }),
         ...(from.first_name && { first_name: from.first_name }),
         ...(from.last_name && { last_name: from.last_name })
+      }
+    )
+  }
+
+  public updateClientExpiredAt(from: User, expiredAt: Date) {
+    entities.Client.update(
+      { user_id: from.id },
+      {
+        expired_at: expiredAt,
+        trial_used: true,
       }
     )
   }

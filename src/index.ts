@@ -149,7 +149,7 @@ class Telegram {
       }
 
       if (!client) return this.db.saveClient(from, chat, server.id, getTrialExpiredAt())
-      this.db.updateClient(from, server.id)
+      this.db.updateClientServer(from, server.id)
     } catch (error: any) {
       this.error(from, chat, error)
     }
@@ -160,7 +160,6 @@ class Telegram {
     if (!client?.server) return this.messages.sendNotFound(chat)
 
     const paidUntil = getSubscriptionExpiredDate(client.expired_at)
-
     this.messages.sendSubscription(chat, client?.server.label, paidUntil)
   }
 
