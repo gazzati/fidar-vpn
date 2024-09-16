@@ -1,4 +1,4 @@
-import { PayTariff, TariffName } from "@root/interfaces/pay"
+import { PayTariff, TariffName } from "@interfaces/pay"
 
 export const getTariffName = (tariff: PayTariff) => {
   switch (tariff) {

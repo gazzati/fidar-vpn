@@ -6,5 +6,5 @@ moduleAlias.addAliases({
   "@interfaces": `${__dirname}/interfaces/`,
   "@api": `${__dirname}/api/`,
   "@helpers": `${__dirname}/helpers/`,
-  "@wireguard": `${__dirname}/wireguard/`
+  "@services": `${__dirname}/services/`
 })

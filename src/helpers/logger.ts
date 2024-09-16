@@ -63,7 +63,7 @@ export const tgLogger = {
     const user = `👨‍💻 [${from.id}] ${userDetails}`
 
     // eslint-disable-next-line no-console
-    console.log(`${Color.Red}${dateLog} ${user} `, message)
+    console.log(`${Color.Red}${dateLog} ${user} ❌`, message)
   }
 }
 

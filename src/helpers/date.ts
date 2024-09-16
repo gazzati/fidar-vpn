@@ -37,3 +37,15 @@ export const getSubscriptionExpiredDate = (expiredAt: Date): string | null => {
     expired.getFullYear()
   )}(${timeLeft})`
 }
+
+export const getNewExpiredAt = (expiredAt: Date, months: number): Date => {
+  const expired = new Date(expiredAt)
+
+  return new Date(expired.setMonth(expired.getMonth() + months))
+}
+
+export const getTrialExpiredAt = (): Date => {
+  const expiredAt = new Date()
+  expiredAt.setMonth(expiredAt.getMonth() + 1)
+  return expiredAt
+}

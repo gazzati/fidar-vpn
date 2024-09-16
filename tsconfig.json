@@ -21,7 +21,7 @@
       "@interfaces/*": ["./interfaces/*"],
       "@api/*": ["./api/*"],
       "@helpers/*": ["./helpers/*"],
-      "@wireguard/*": ["./wireguard/*"]
+      "@services/*": ["./services/*"]
     },
     "typeRoots": ["./node_modules/@types"]
   },
