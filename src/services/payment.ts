@@ -52,7 +52,7 @@ class PaymentService {
     const months = getTariffMonths(tariff)
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
 
-    this.db.updateClientExpiredAt(from, newExpiredAt.toDateString())
+    this.db.updateClientExpiredAt(from, newExpiredAt.toString())
 
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
