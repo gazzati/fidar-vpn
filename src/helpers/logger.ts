@@ -1,4 +1,4 @@
-import {User} from 'node-telegram-bot-api';
+import { User } from "node-telegram-bot-api"
 
 enum Color {
   Reset = "\x1b[0m",
@@ -34,7 +34,7 @@ const logger = {
     const dateLog = getLogDate()
 
     // eslint-disable-next-line no-console
-    console.log(`${Color.Cyan}${dateLog} ${Color.Green}`, ...args)
+    console.log(`${Color.Cyan}${dateLog}${Color.Green}`, ...args)
   },
 
   error(message: any) {
@@ -51,7 +51,6 @@ export const tgLogger = {
 
     const userDetails = from.username ? `@${from.username}` : `(${from.first_name})`
     const user = `👨‍💻 [${from.id}] ${userDetails}`
-
 
     // eslint-disable-next-line no-console
     console.log(`${Color.Cyan}${dateLog} ${Color.Green}${user} -> ${Color.Magenta}`, message)

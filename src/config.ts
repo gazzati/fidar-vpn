@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import Joi from "joi"
 
-import {PayTariff} from '@interfaces/pay';
+import { PayTariff, TariffName } from "@interfaces/pay"
 
 dotenv.config()
 
@@ -11,23 +11,26 @@ const envVarsSchema = Joi.object({
   PSQL_HOST: Joi.string().default("localhost").description("Database Host"),
   PSQL_DATABASE: Joi.string().default("database").description("Database Name"),
   PSQL_USER: Joi.string().default("root").description("Database User"),
-  PSQL_PASSWORD: Joi.string().allow("").default("root").description("Database Password")
+  PSQL_PASSWORD: Joi.string().allow("").default("root").description("Database Password"),
+
+  PROVIDER_TOKEN: Joi.string().allow("").default("").description("Provider token"),
+  CURRENCY: Joi.string().allow("").default("RUB").description("Currency")
 })
 
 const { error, value: envVars } = envVarsSchema.validate(process.env)
 if (error) new Error(`Config validation error: ${error.message}`)
 
- const callbackData = {
-  start: 'start',
-  create: 'create',
-  manual: 'manual',
-  files: 'files',
-  location: 'location',
-  subscription: 'subscription',
-  pay: 'pay',
-  tariff: 'tariff',
-  support: 'support',
- }
+const callbackData = {
+  start: "start",
+  create: "create",
+  manual: "manual",
+  files: "files",
+  location: "location",
+  subscription: "subscription",
+  pay: "pay",
+  tariff: "tariff",
+  support: "support"
+}
 
 export default {
   telegramToken: envVars.TELEGRAM_TOKEN,
@@ -37,12 +40,17 @@ export default {
   psqlUsername: envVars.PSQL_USER,
   psqlPassword: envVars.PSQL_PASSWORD,
 
+  providerToken: envVars.PROVIDER_TOKEN,
+  currency: envVars.CURRENCY,
+
   serversPort: 3003,
 
   phrases: {
-    START_MESSAGE: "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой и SberPay",
+    START_MESSAGE:
+      "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой и SberPay",
     LOCATION_MESSAGE: "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n",
-    LOCATION_WITH_EXIST_MESSAGE: "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n⚠️ Обратите внимание, после изменения локации предыдущий файл подключения свою работу прекращает",
+    LOCATION_WITH_EXIST_MESSAGE:
+      "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n⚠️ Обратите внимание, после изменения локации предыдущий файл подключения свою работу прекращает",
     HELP_MESSAGE: "По всем вопросам пиши @gazzati",
     ERROR_MESSAGE: "🤷‍♂️ Что то пошло не так, попробуйте повторить позже",
     SERVER_ERROR_MESSAGE: "Данный сервер неисправен, попробуй другой",
@@ -53,10 +61,11 @@ export default {
     PAY_MESSAGE: "💵 Выберите сумму для пополнения: \n\nОплата возможна Банковской картой и SberPay",
     PAY_NEW_USER_MESSAGE: "🫶 Мы ценим наших клиентов и поэтому рекомендуем сначала воспользоваться бесплатным периодом",
     NEED_PAY_MESSAGE: "💵 Необходимо произвести оплату",
+    SUCCESSFUL_PAYMENT_MESSAGE: "👍 Оплата прошла успешно",
+    FAILED_PAYMENT_MESSAGE: "😢 Извините, что то пошло не так. Попробуйте позже",
     MANUAL_MESSAGE:
       "⚙️ Инструкция по установке: \n\n1️⃣ Установите приложение WireGuard по ссылке ниже\n\n2️⃣ Импортируйте полученный файл в приложение WireGuard либо отсканируйте QR \n\n3️⃣ Для включения/отключения VPN активируйте добавленное подключение\n\n"
   },
-
 
   callbackData,
 
@@ -68,7 +77,7 @@ export default {
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],
     files: [{ text: "💾 Скачать данные для подключения", callback_data: callbackData.files }],
     location: [{ text: "📍 Сменить локацию", callback_data: callbackData.location }],
-    manual: [{ text: "📝 Инструкция", callback_data: callbackData.manual }],
+    manual: [{ text: "📝 Инструкция", callback_data: callbackData.manual }]
   },
 
   inlineKeyboard: {
@@ -85,9 +94,19 @@ export default {
     ],
 
     tariffs: [
-      [{ text: `${PayTariff.Month}₽ - 1 Месяц`, callback_data: `${callbackData.tariff}:${PayTariff.Month}` }],
-      [{ text: `${PayTariff.Month3}₽ - 3 Месяца`, callback_data: `${callbackData.tariff}:${PayTariff.Month3}` }],
-      [{ text: `${PayTariff.Year}₽ - 1 Год`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }],
-    ],
+      [
+        {
+          text: `${PayTariff.Month}₽ - ${TariffName.Month}`,
+          callback_data: `${callbackData.tariff}:${PayTariff.Month}`
+        }
+      ],
+      [
+        {
+          text: `${PayTariff.Month3}₽ - ${TariffName.Month3}`,
+          callback_data: `${callbackData.tariff}:${PayTariff.Month3}`
+        }
+      ],
+      [{ text: `${PayTariff.Year}₽ - ${TariffName.Year}`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }]
+    ]
   }
 }

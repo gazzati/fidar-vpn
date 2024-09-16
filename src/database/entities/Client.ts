@@ -15,10 +15,10 @@ export class Client {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column({ unique: true, type: 'bigint' })
+  @Column({ unique: true, type: "bigint" })
   user_id: number
 
-  @Column({ nullable: true, type: 'bigint'  })
+  @Column({ nullable: true, type: "bigint" })
   chat_id: number
 
   @Column({ nullable: true })
