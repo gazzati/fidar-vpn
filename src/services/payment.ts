@@ -3,7 +3,7 @@ import TelegramBot, { Chat, PreCheckoutQuery, Message } from "node-telegram-bot-
 import config from "@root/config"
 
 import { type Client } from "@database/entities/Client"
-import { getSubscriptionExpiredDate, getNewExpiredAt, dateWithoutTimezone } from "@helpers/date"
+import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import logger, { tgLogger } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
 
@@ -52,7 +52,7 @@ class PaymentService {
     const months = getTariffMonths(tariff)
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
 
-    this.db.updateClientExpiredAt(from, dateWithoutTimezone(newExpiredAt))
+    this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))
 
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
