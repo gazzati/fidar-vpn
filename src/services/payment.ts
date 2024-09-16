@@ -31,13 +31,14 @@ class PaymentService {
 
   public async successfulPayment(message: Message) {
     const { from, chat } = message
-
+console.log(message)
     if (!from) {
       logger.error("[from] is required", chat)
       return this.messages.sendServerError(chat)
     }
 
     const tariff = message.successful_payment?.total_amount
+    console.log(tariff)
     if (!tariff) {
       tgLogger.error(from, "[tariff] is required")
       return this.messages.sendServerError(chat)
@@ -50,6 +51,7 @@ class PaymentService {
     }
 
     const months = getTariffMonths(tariff)
+    console.log(months)
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
