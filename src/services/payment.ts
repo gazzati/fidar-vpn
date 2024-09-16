@@ -3,7 +3,7 @@ import TelegramBot, { Chat, PreCheckoutQuery, Message } from "node-telegram-bot-
 import config from "@root/config"
 
 import { type Client } from "@database/entities/Client"
-import { getSubscriptionExpiredDate, getNewExpiredAt } from "@helpers/date"
+import { getSubscriptionExpiredDate, getNewExpiredAt, dateWithoutTimezone } from "@helpers/date"
 import logger, { tgLogger } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
 
@@ -32,19 +32,19 @@ class PaymentService {
   public async successfulPayment(message: Message) {
     const { from, chat } = message
 
-    if(!from) {
+    if (!from) {
       logger.error("[from] is required", chat)
       return this.messages.sendServerError(chat)
     }
 
     const tariff = message.successful_payment?.total_amount
-    if(!tariff) {
+    if (!tariff) {
       tgLogger.error(from, "[tariff] is required")
       return this.messages.sendServerError(chat)
     }
 
     const client = await this.db.getClient(from)
-    if(!client) {
+    if (!client) {
       logger.error("Client not found", chat)
       return this.messages.sendServerError(chat)
     }
@@ -52,7 +52,7 @@ class PaymentService {
     const months = getTariffMonths(tariff)
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
 
-    this.db.updateClientExpiredAt(from, newExpiredAt.toString())
+    this.db.updateClientExpiredAt(from, dateWithoutTimezone(newExpiredAt))
 
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 

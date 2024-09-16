@@ -44,7 +44,7 @@ class DbService {
       { user_id: from.id },
       {
         expired_at: expiredAt,
-        trial_used: true,
+        trial_used: true
       }
     )
   }
