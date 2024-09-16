@@ -51,12 +51,11 @@ class PaymentService {
 
     const months = getTariffMonths(tariff)
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
-
-    this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))
-
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
     this.messages.sendSuccessfulPayment(chat, paidUntil)
+
+    this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))
 
     tgLogger.log(from, `🔥 Successful payment amount: [${tariff}]`)
   }
