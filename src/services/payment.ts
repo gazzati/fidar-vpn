@@ -31,14 +31,13 @@ class PaymentService {
 
   public async successfulPayment(message: Message) {
     const { from, chat } = message
-console.log(message)
+
     if (!from) {
       logger.error("[from] is required", chat)
       return this.messages.sendServerError(chat)
     }
 
     const tariff = message.successful_payment?.total_amount
-    console.log(tariff)
     if (!tariff) {
       tgLogger.error(from, "[tariff] is required")
       return this.messages.sendServerError(chat)
@@ -50,8 +49,7 @@ console.log(message)
       return this.messages.sendServerError(chat)
     }
 
-    const months = getTariffMonths(tariff)
-    console.log(months)
+    const months = getTariffMonths(tariff / 100)
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
@@ -59,7 +57,7 @@ console.log(message)
 
     this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))
 
-    tgLogger.log(from, `🔥 Successful payment amount: [${tariff}]`)
+    tgLogger.log(from, `🔥 Successful payment amount: [${tariff / 100}]`)
   }
 
   public async invoice(chat: Chat, client: Client, tariff: PayTariff) {
