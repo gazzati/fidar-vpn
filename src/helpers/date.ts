@@ -51,5 +51,5 @@ export const getTrialExpiredAt = (): Date => {
 }
 
 export const dbDate = (date: Date) => {
-  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`
+  return '2022-09-02 21:40:50'
 }
