@@ -135,9 +135,9 @@ class Telegram {
         await new Promise(resolve => setTimeout(resolve, 1000))
       }
 
+      this.bot.deleteMessage(chat.id, messageId)
       await this.sendFiles(chat.id, from.username || from.id.toString(), response.conf, response.qr)
 
-      this.bot.deleteMessage(chat.id, messageId)
       this.messages.sendDone(chat)
 
       tgLogger.log(from, `✅ Client created server [${serverName}]`)
