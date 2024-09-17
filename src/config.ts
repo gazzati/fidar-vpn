@@ -82,7 +82,7 @@ export default {
     pay: [{ text: "💵 Оплатить", callback_data: callbackData.pay }],
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],
     files: [{ text: "💾 Скачать данные для подключения", callback_data: callbackData.files }],
-    location: [{ text: "📍 Сменить локацию", callback_data: callbackData.location }],
+    location: [{ text: "📍 Выбрать локацию", callback_data: callbackData.location }],
     manual: [{ text: "📝 Инструкция", callback_data: callbackData.manual }]
   },
 

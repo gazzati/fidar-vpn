@@ -50,7 +50,7 @@ class PaymentService {
     }
 
     const months = getTariffMonths(tariff / 100)
-    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
+    const newExpiredAt = getNewExpiredAt(months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
     this.messages.sendSuccessfulPayment(chat, paidUntil)
@@ -60,11 +60,11 @@ class PaymentService {
     tgLogger.log(from, `🔥 Successful payment amount: [${tariff / 100}]`)
   }
 
-  public async invoice(chat: Chat, client: Client, tariff: PayTariff) {
+  public async invoice(chat: Chat, tariff: PayTariff) {
     const tariffName = getTariffName(tariff)
     const months = getTariffMonths(tariff)
 
-    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
+    const newExpiredAt = getNewExpiredAt(months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
     await this.bot.sendInvoice(
