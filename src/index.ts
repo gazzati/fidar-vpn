@@ -107,10 +107,18 @@ class Telegram {
       return this.bot.deleteMessage(message.chat.id, message.message_id)
     }
 
+    if (data === config.callbackData.promo) {
+      this.messages.sendPromo(chat)
+      return this.bot.deleteMessage(message.chat.id, message.message_id)
+    }
+
+    if (data === config.callbackData.subscription) {
+      this.subscription(from, chat)
+      return this.bot.deleteMessage(message.chat.id, message.message_id)
+    }
+
     if (data === config.callbackData.manual) return this.messages.sendManual(chat)
     if (data === config.callbackData.pay) return this.messages.sendPay(from, chat)
-    if (data === config.callbackData.promo) return this.messages.sendPromo(chat)
-    if (data === config.callbackData.subscription) return this.subscription(from, chat)
     if (data === config.callbackData.files) return this.files(from, chat)
     if (data === config.callbackData.support) return this.messages.sendHelp(chat)
   }
