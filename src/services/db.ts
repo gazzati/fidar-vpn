@@ -60,8 +60,14 @@ class DbService {
     })
   }
 
-  public getMatchedPromo(value: string): Promise<Promo | null> {
-    return entities.Promo.findOne({ where: { active: true, value } })
+  public async getMatchedPromo(value: string): Promise<Promo | null> {
+    const promo = await entities.Promo.findOne({ where: { active: true, value } })
+    if(!promo) return null
+
+    promo.active = false
+    await entities.Promo.save(promo)
+
+    return promo
   }
 }
 
