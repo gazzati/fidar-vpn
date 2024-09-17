@@ -1,6 +1,6 @@
 {
   "name": "fidar-vpn",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "main": "index.js",
   "repository": "https://github.com/gazzati/fidar-vpn.git",
   "author": "gazzati <gazzaevtimur@gmail.com>",
@@ -8,9 +8,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json && cp .env ./build/.env",
     "start": "node build/index.js",
-    "start:worker": "node build/worker.js",
+    "start:worker": "node build/workers/index.js",
     "dev": "ts-node-dev --respawn --transpile-only --quiet src/index.ts",
-    "dev:worker": "ts-node-dev --respawn --transpile-only --quiet src/worker.ts",
+    "dev:worker": "ts-node-dev --respawn --transpile-only --quiet src/workers/index.ts",
     "format": "prettier --write \"src/\"",
     "lint": "eslint src/**/*.ts --fix",
     "type": "tsc --project tsconfig.json --noEmit"

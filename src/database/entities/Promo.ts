@@ -1,7 +1,5 @@
 import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from "typeorm"
 
-import { PayTariff } from "@interfaces/pay"
-
 @Entity({ name: "promo_codes" })
 export class Promo {
   @PrimaryGeneratedColumn()
@@ -11,7 +9,7 @@ export class Promo {
   value: string
 
   @Column()
-  months: PayTariff
+  months: number
 
   @Column()
   active: boolean

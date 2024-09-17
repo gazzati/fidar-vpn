@@ -1,5 +1,5 @@
 import "./aliases"
-import { createClient, revokeClient } from "@api/index"
+import { createClient, revokeClient } from "@api/server"
 import TelegramBot, { type User, Chat, CallbackQuery } from "node-telegram-bot-api"
 
 import { getNewExpiredAt, dbDate } from "@root/helpers/date"

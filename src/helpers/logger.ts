@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { User } from "node-telegram-bot-api"
 
 enum Color {
@@ -29,20 +30,16 @@ export const getLogDate = (today = new Date()): string => {
   return `[${date} ${time}]`
 }
 
-const logger = {
-  debug(...args: Array<any>) {
-    const dateLog = getLogDate()
 
-    // eslint-disable-next-line no-console
-    console.log(`${Color.Cyan}${dateLog}${Color.Green}`, ...args)
-  },
 
-  error(...args: Array<any>) {
-    const dateLog = getLogDate()
+export const log = (...args: Array<any>) => {
+  const dateLog = getLogDate()
+  console.log(`${Color.Cyan}${dateLog}${Color.Green}`, ...args)
+}
 
-    // eslint-disable-next-line no-console
-    console.log(`${Color.Red}${dateLog}`, ...args)
-  }
+export const error = (...args: Array<any>) => {
+  const dateLog = getLogDate()
+  console.log(`${Color.Red}${dateLog}`, ...args)
 }
 
 export const tgLogger = {
@@ -52,7 +49,6 @@ export const tgLogger = {
     const userDetails = from.username ? `@${from.username}` : `(${from.first_name})`
     const user = `👨‍💻 [${from.id}] ${userDetails}`
 
-    // eslint-disable-next-line no-console
     console.log(`${Color.Cyan}${dateLog} ${Color.Green}${user} -> ${Color.Magenta}`, message)
   },
 
@@ -62,9 +58,22 @@ export const tgLogger = {
     const userDetails = from.username ? `@${from.username}` : `(${from.first_name})`
     const user = `👨‍💻 [${from.id}] ${userDetails}`
 
-    // eslint-disable-next-line no-console
     console.log(`${Color.Red}${dateLog} ${user} ❌`, message)
   }
 }
 
-export default logger
+class Logger {
+  constructor(private name: string) {}
+
+  log(...args: Array<any>) {
+    const dateLog = getLogDate()
+    console.log(`${Color.Cyan}${dateLog} ${Color.Yellow}[${this.name}]`, ...args)
+  }
+
+  error(...args: Array<any>) {
+    const dateLog = getLogDate()
+    console.log(`${Color.Red}${dateLog} ${Color.Yellow}[${this.name}]`, ...args)
+  }
+}
+
+export default Logger

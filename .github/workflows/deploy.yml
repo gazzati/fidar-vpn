@@ -28,3 +28,4 @@ jobs:
                     yarn install
                     yarn build
                     pm2 restart fidar
+                    pm2 restart fidar-worker

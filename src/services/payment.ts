@@ -4,7 +4,7 @@ import config from "@root/config"
 
 import { type Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
-import logger, { tgLogger } from "@helpers/logger"
+import { tgLogger, error } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
 
 import { PayTariff } from "@interfaces/pay"
@@ -33,7 +33,7 @@ class PaymentService {
     const { from, chat } = message
 
     if (!from) {
-      logger.error("[from] is required", chat)
+      error("[from] is required", chat)
       return this.messages.sendServerError(chat)
     }
 
@@ -45,7 +45,7 @@ class PaymentService {
 
     const client = await this.db.getClient(from)
     if (!client) {
-      logger.error("Client not found", chat)
+      error("Client not found", chat)
       return this.messages.sendServerError(chat)
     }
 
