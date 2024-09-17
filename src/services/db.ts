@@ -56,7 +56,7 @@ class DbService {
 
   public getServersForClient(client: Client | null): Promise<Array<Server>> {
     return entities.Server.find({
-      where: { active: true, ...(client && { id: Not(client.server.id) }) }
+      where: { active: true, ...(client?.server && { id: Not(client.server.id) }) }
     })
   }
 
