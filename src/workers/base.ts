@@ -1,5 +1,5 @@
-import {entities} from "@database/data-source"
-import Logger from '@helpers/logger'
+import { entities } from "@database/data-source"
+import Logger from "@helpers/logger"
 
 abstract class Base {
   protected logger: Logger
@@ -7,7 +7,7 @@ abstract class Base {
 
   protected entities = entities
 
-  constructor({name, pauseSec}: {name: string, pauseSec: number}) {
+  constructor({ name, pauseSec }: { name: string; pauseSec: number }) {
     this.logger = new Logger(name)
     this.pauseMs = pauseSec * 1000
   }
@@ -17,7 +17,7 @@ abstract class Base {
 
     await this.sleep(500) // for db connect
 
-    this.logger.log('Started')
+    this.logger.log("Started")
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -35,7 +35,7 @@ abstract class Base {
   public async loop() {}
 
   async sleep(pause = this.pauseMs) {
-    await new Promise((resolve) => setTimeout(resolve, pause))
+    await new Promise(resolve => setTimeout(resolve, pause))
   }
 }
 

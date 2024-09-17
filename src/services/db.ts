@@ -62,7 +62,7 @@ class DbService {
 
   public async getMatchedPromo(value: string): Promise<Promo | null> {
     const promo = await entities.Promo.findOne({ where: { active: true, value } })
-    if(!promo) return null
+    if (!promo) return null
 
     promo.active = false
     await entities.Promo.save(promo)

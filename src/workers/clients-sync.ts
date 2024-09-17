@@ -1,8 +1,8 @@
-import {getClients} from '@root/api/server';
+import { getClients } from "@root/api/server"
 
-import {entities} from '@database/data-source';
+import { entities } from "@database/data-source"
 
-import Base from './base.js'
+import Base from "./base.js"
 
 class ClientsSync extends Base {
   public async loop() {

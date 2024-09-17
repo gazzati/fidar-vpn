@@ -30,8 +30,6 @@ export const getLogDate = (today = new Date()): string => {
   return `[${date} ${time}]`
 }
 
-
-
 export const log = (...args: Array<any>) => {
   const dateLog = getLogDate()
   console.log(`${Color.Cyan}${dateLog}${Color.Green}`, ...args)
