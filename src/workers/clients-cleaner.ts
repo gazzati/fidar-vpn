@@ -31,8 +31,6 @@ class ClientsCleaner extends Base {
           }
         )
 
-        this.entities.Client.delete({ user_id: userId })
-
         sendMessage(
           client.chat_id.toString(),
           !client.trial_used ? config.phrases.EXPIRED_TRIAL_MESSAGE : config.phrases.EXPIRED_SUBSCRIPTION_MESSAGE,
