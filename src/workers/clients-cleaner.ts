@@ -1,6 +1,6 @@
 import {revokeClient} from '@api/server';
 import {sendMessage} from '@api/tg';
-import {LessThan} from 'typeorm';
+import {getManager, LessThan} from 'typeorm';
 
 import config from '@root/config';
 
@@ -18,6 +18,16 @@ class ClientsCleaner extends Base {
 
       try {
         revokeClient(client.server.ip, userId)
+
+        getManager().query(`update clients set server_id = null where user_id=${userId}`)
+
+        // entities.Client.update(
+        //   { user_id: userId },
+        //   {
+        //     server: null
+        //   }
+        // )
+
         this.entities.Client.delete({ user_id: userId})
 
         sendMessage(client.chat_id.toString(), !client.trial_used ? config.phrases.EXPIRED_TRIAL_MESSAGE : config.phrases.EXPIRED_SUBSCRIPTION_MESSAGE, [config.inlineKeyboardItem.pay, config.inlineKeyboardItem.main])
