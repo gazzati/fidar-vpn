@@ -1,6 +1,6 @@
 import { revokeClient } from "@api/server"
 import { sendMessage } from "@api/tg"
-import { LessThan } from "typeorm"
+import { LessThan, Not } from "typeorm"
 
 import config from "@root/config"
 
@@ -9,13 +9,16 @@ import Base from "./base"
 class ClientsCleaner extends Base {
   public async loop() {
     const clients = await this.entities.Client.find({
-      where: { expired_at: LessThan(new Date()) },
+      where: { expired_at: LessThan(new Date()), server: Not(null) },
       relations: { server: true }
     })
     this.logger.log(clients)
 
     for (const client of clients) {
-      if (!client?.server?.ip) return this.logger.error("Not found server for user", client)
+      if (!client?.server?.ip) {
+        this.logger.error("Not found server for user", client)
+        continue
+      }
 
       const userId = client.user_id
 
