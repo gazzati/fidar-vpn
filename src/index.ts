@@ -124,6 +124,7 @@ class Telegram {
       const userId = from.id
 
       const client = await this.db.getClientWithServer(from)
+      console.log(111, client)
       if (client) {
         const expired = new Date() > new Date(client.expired_at)
         if (expired) {
