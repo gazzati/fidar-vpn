@@ -70,7 +70,7 @@ class MessageService {
   }
 
   public sendNotFound(from: User, chat: Chat) {
-    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, [config.inlineKeyboardItem.main])
+    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, [config.inlineKeyboardItem.pay, config.inlineKeyboardItem.main])
     tgLogger.error(from, "User not found")
   }
 
@@ -81,6 +81,7 @@ class MessageService {
   public sendSuccessfulPayment(chat: Chat, paidUntil: string | null) {
     this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PAYMENT_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
       config.inlineKeyboardItem.subscription,
+      config.inlineKeyboardItem.location,
       config.inlineKeyboardItem.main
     ])
   }
@@ -88,6 +89,7 @@ class MessageService {
   public sendSuccessfulPromo(chat: Chat, paidUntil: string | null) {
     this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PROMO_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
       config.inlineKeyboardItem.subscription,
+      config.inlineKeyboardItem.location,
       config.inlineKeyboardItem.main
     ])
   }
