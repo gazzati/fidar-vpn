@@ -70,7 +70,11 @@ class MessageService {
   }
 
   public sendNotFound(from: User, chat: Chat) {
-    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, [config.inlineKeyboardItem.location, config.inlineKeyboardItem.pay, config.inlineKeyboardItem.main])
+    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, [
+      config.inlineKeyboardItem.location,
+      config.inlineKeyboardItem.pay,
+      config.inlineKeyboardItem.main
+    ])
     tgLogger.error(from, "User not found")
   }
 

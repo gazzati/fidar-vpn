@@ -23,7 +23,7 @@ class ClientsCleaner extends Base {
       const userId = client.user_id
 
       try {
-       revokeClient(client.server.ip, userId)
+        revokeClient(client.server.ip, userId)
 
         this.entities.Client.update(
           { user_id: userId },

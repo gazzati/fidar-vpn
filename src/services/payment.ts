@@ -2,7 +2,6 @@ import TelegramBot, { Chat, PreCheckoutQuery, Message } from "node-telegram-bot-
 
 import config from "@root/config"
 
-import { type Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import { tgLogger, error } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
