@@ -2,6 +2,7 @@ import { Not } from "typeorm"
 
 import { entities } from "@database/data-source"
 import type { Client } from "@database/entities/Client"
+import type { Promo } from "@database/entities/Promo"
 import type { Server } from "@database/entities/Server"
 
 import type { User, Chat } from "node-telegram-bot-api"
@@ -57,6 +58,10 @@ class DbService {
     return entities.Server.find({
       where: { active: true, ...(client && { id: Not(client.server.id) }) }
     })
+  }
+
+  public getMatchedPromo(value: string): Promise<Promo | null> {
+    return entities.Promo.findOne({ where: { active: true, value } })
   }
 }
 

@@ -3,6 +3,7 @@ import { DataSource } from "typeorm"
 import config from "@root/config"
 
 import { Client } from "@database/entities/Client"
+import { Promo } from "@database/entities/Promo"
 import { Server } from "@database/entities/Server"
 import logger from "@helpers/logger"
 
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: config.psqlDatabase,
   username: config.psqlUsername,
   password: config.psqlPassword,
-  entities: [Server, Client],
+  entities: [Server, Client, Promo],
   subscribers: [],
   migrations: [],
   synchronize: true
@@ -26,5 +27,6 @@ AppDataSource.initialize()
 
 export const entities = {
   Server: AppDataSource.getRepository(Server),
-  Client: AppDataSource.getRepository(Client)
+  Client: AppDataSource.getRepository(Client),
+  Promo: AppDataSource.getRepository(Promo)
 }

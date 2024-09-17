@@ -1,6 +1,7 @@
 import TelegramBot from "node-telegram-bot-api"
 
 import config from "@root/config"
+import { tgLogger } from "@root/helpers/logger"
 
 import { Server } from "@database/entities/Server"
 
@@ -48,6 +49,14 @@ class MessageService {
     )
   }
 
+  public sendPromo(chat: Chat) {
+    this.sendMessage(chat, config.phrases.SEND_PROMO_MESSAGE)
+  }
+
+  public sendPromoNotFound(chat: Chat) {
+    this.sendMessage(chat, config.phrases.PROMO_NOT_FOUND_MESSAGE)
+  }
+
   public sendDone(chat: Chat) {
     this.sendMessage(chat, config.phrases.DONE_MESSAGE, config.inlineKeyboard.manual)
   }
@@ -60,8 +69,9 @@ class MessageService {
     this.sendMessage(chat, config.phrases.HELP_MESSAGE)
   }
 
-  public sendNotFound(chat: Chat) {
+  public sendNotFound(from: User, chat: Chat) {
     this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, [config.inlineKeyboardItem.main])
+    tgLogger.error(from, "User not found")
   }
 
   public sendNeedPay(chat: Chat) {
@@ -70,6 +80,13 @@ class MessageService {
 
   public sendSuccessfulPayment(chat: Chat, paidUntil: string | null) {
     this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PAYMENT_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
+      config.inlineKeyboardItem.subscription,
+      config.inlineKeyboardItem.main
+    ])
+  }
+
+  public sendSuccessfulPromo(chat: Chat, paidUntil: string | null) {
+    this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PROMO_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
       config.inlineKeyboardItem.subscription,
       config.inlineKeyboardItem.main
     ])

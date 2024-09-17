@@ -2,6 +2,8 @@ import "./aliases"
 import { createClient, revokeClient } from "@api/index"
 import TelegramBot, { type User, Chat, CallbackQuery } from "node-telegram-bot-api"
 
+import { getNewExpiredAt, dbDate } from "@root/helpers/date"
+
 import { getSubscriptionExpiredDate, getTrialExpiredAt } from "@helpers/date"
 import { tgLogger } from "@helpers/logger"
 import DbService from "@services/db"
@@ -42,9 +44,11 @@ class Telegram {
     this.bot.on("successful_payment", message => this.payment.successfulPayment(message))
   }
 
-  private message(from: User, chat: Chat, message: string) {
+  private async message(from: User, chat: Chat, message: string) {
     this.bot.sendChatAction(chat.id, "typing")
-    tgLogger.log(from, `📩 Message ${message}`)
+    tgLogger.log(from, `📩 Message(promo) ${message}`)
+
+    await this.promo(from, chat, message)
   }
 
   private commands(from: User, chat: Chat, action: string) {
@@ -105,6 +109,7 @@ class Telegram {
 
     if (data === config.callbackData.manual) return this.messages.sendManual(chat)
     if (data === config.callbackData.pay) return this.messages.sendPay(from, chat)
+    if (data === config.callbackData.promo) return this.messages.sendPromo(chat)
     if (data === config.callbackData.subscription) return this.subscription(from, chat)
     if (data === config.callbackData.files) return this.files(from, chat)
     if (data === config.callbackData.support) return this.messages.sendHelp(chat)
@@ -157,17 +162,33 @@ class Telegram {
 
   private async subscription(from: User, chat: Chat) {
     const client = await this.db.getClientWithServer(from)
-    if (!client?.server) return this.messages.sendNotFound(chat)
+    if (!client?.server) return this.messages.sendNotFound(from, chat)
 
     const paidUntil = getSubscriptionExpiredDate(client.expired_at)
     this.messages.sendSubscription(chat, client?.server.label, paidUntil)
+  }
+
+  private async promo(from: User, chat: Chat, message: string) {
+    const client = await this.db.getClientWithServer(from)
+    if (!client?.server) return this.messages.sendNotFound(from, chat)
+
+    const promo = await this.db.getMatchedPromo(message)
+    if (!promo) return this.messages.sendPromoNotFound(chat)
+
+    const newExpiredAt = getNewExpiredAt(client.expired_at, promo.months)
+    const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
+
+    this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))
+
+    this.messages.sendSuccessfulPromo(chat, paidUntil)
+    tgLogger.log(from, `🏷️ Successful promo use [${promo.value}]`)
   }
 
   private async files(from: User, chat: Chat) {
     const userId = from.id
 
     const client = await this.db.getClientWithServer(from)
-    if (!client?.server) return this.messages.sendNotFound(chat)
+    if (!client?.server) return this.messages.sendNotFound(from, chat)
 
     const response = await createClient(client.server.ip, userId)
     if (!response.success || !response.already_exist) throw Error("Find already created client")

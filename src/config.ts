@@ -29,7 +29,8 @@ const callbackData = {
   subscription: "subscription",
   pay: "pay",
   tariff: "tariff",
-  support: "support"
+  support: "support",
+  promo: "promo"
 }
 
 export default {
@@ -61,7 +62,10 @@ export default {
     PAY_NEW_USER_MESSAGE: "🫶 Мы ценим наших клиентов и поэтому рекомендуем сначала воспользоваться бесплатным периодом",
     NEED_PAY_MESSAGE: "💵 Необходимо произвести оплату",
     SUCCESSFUL_PAYMENT_MESSAGE: "👍 Оплата прошла успешно",
+    SUCCESSFUL_PROMO_MESSAGE: "👍 Промокод успешно",
     FAILED_PAYMENT_MESSAGE: "😢 Извините, что то пошло не так. Попробуйте позже",
+    SEND_PROMO_MESSAGE: "😎 Отправьте промокод в чат",
+    PROMO_NOT_FOUND_MESSAGE: "😔 Промокод не найден",
     MANUAL_MESSAGE:
       "⚙️ Инструкция по установке: \n\n1️⃣ Установите приложение WireGuard по ссылке ниже\n\n2️⃣ Импортируйте полученный файл в приложение WireGuard либо отсканируйте QR \n\n3️⃣ Для включения/отключения VPN активируйте добавленное подключение\n\n"
   },
@@ -105,7 +109,8 @@ export default {
           callback_data: `${callbackData.tariff}:${PayTariff.Month3}`
         }
       ],
-      [{ text: `${PayTariff.Year}₽ - ${TariffName.Year}`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }]
+      [{ text: `${PayTariff.Year}₽ - ${TariffName.Year}`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }],
+      [{ text: "🏷️ Ввести промокод", callback_data: callbackData.promo }]
     ]
   }
 }
