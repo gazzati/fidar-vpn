@@ -98,7 +98,7 @@ class Telegram {
       const client = await this.db.getClient(from)
       if (!client) return this.error(from, chat, "Client not found")
 
-      await this.payment.invoice(chat, Number(tariff))
+      await this.payment.invoice(chat, client, Number(tariff))
       return this.bot.deleteMessage(message.chat.id, message.message_id)
     }
 
@@ -124,7 +124,7 @@ class Telegram {
       const userId = from.id
 
       const client = await this.db.getClientWithServer(from)
-      console.log(111, client)
+
       if (client) {
         const expired = new Date() > new Date(client.expired_at)
         if (expired) {
@@ -180,7 +180,7 @@ class Telegram {
     const promo = await this.db.getMatchedPromo(message)
     if (!promo) return this.messages.sendPromoNotFound(chat)
 
-    const newExpiredAt = getNewExpiredAt(promo.months)
+    const newExpiredAt = getNewExpiredAt(client.expired_at, promo.months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
     this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))

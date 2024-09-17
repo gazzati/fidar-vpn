@@ -38,10 +38,13 @@ export const getSubscriptionExpiredDate = (expiredAt: Date): string | null => {
   )}(${timeLeft})`
 }
 
-export const getNewExpiredAt = (months: number): Date => {
-  const expired = new Date()
+export const getNewExpiredAt = (expiredAt: Date, months: number): Date => {
+  const expired = new Date(expiredAt)
+  const now = new Date()
 
-  return new Date(expired.setMonth(expired.getMonth() + months))
+  const expiredDate = now > expired ? now : expired
+
+  return new Date(expiredDate.setMonth(expiredDate.getMonth() + months))
 }
 
 export const getTrialExpiredAt = (): Date => {

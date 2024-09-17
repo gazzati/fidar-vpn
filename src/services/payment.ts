@@ -2,6 +2,7 @@ import TelegramBot, { Chat, PreCheckoutQuery, Message } from "node-telegram-bot-
 
 import config from "@root/config"
 
+import { Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import { tgLogger, error } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
@@ -49,7 +50,7 @@ class PaymentService {
     }
 
     const months = getTariffMonths(tariff / 100)
-    const newExpiredAt = getNewExpiredAt(months)
+    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
     this.messages.sendSuccessfulPayment(chat, paidUntil)
@@ -59,11 +60,11 @@ class PaymentService {
     tgLogger.log(from, `🔥 Successful payment amount: [${tariff / 100}]`)
   }
 
-  public async invoice(chat: Chat, tariff: PayTariff) {
+  public async invoice(chat: Chat, client: Client, tariff: PayTariff) {
     const tariffName = getTariffName(tariff)
     const months = getTariffMonths(tariff)
 
-    const newExpiredAt = getNewExpiredAt(months)
+    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
     await this.bot.sendInvoice(
