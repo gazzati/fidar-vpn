@@ -19,7 +19,7 @@ class ClientsCleaner extends Base {
       try {
         revokeClient(client.server.ip, userId)
 
-        getManager().query(`update clients set server_id = null where user_id=${userId}`)
+        getManager().query(`update clients set server_id = null, trial_used = true  where user_id=${userId}`)
 
         // entities.Client.update(
         //   { user_id: userId },
