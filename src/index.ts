@@ -173,8 +173,8 @@ class Telegram {
   }
 
   private async promo(from: User, chat: Chat, message: string) {
-    const client = await this.db.getClientWithServer(from)
-    if (!client?.server) return this.messages.sendNotFound(from, chat)
+    const client = await this.db.getClient(from)
+    if (!client) return this.messages.sendNotFound(from, chat)
 
     const promo = await this.db.getMatchedPromo(message)
     if (!promo) return this.messages.sendPromoNotFound(chat)
