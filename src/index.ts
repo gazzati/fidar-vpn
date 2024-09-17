@@ -170,7 +170,7 @@ class Telegram {
     if (!client?.server) return this.messages.sendNotFound(from, chat)
 
     const paidUntil = getSubscriptionExpiredDate(client.expired_at)
-    this.messages.sendSubscription(chat, client?.server.label, paidUntil)
+    this.messages.sendSubscription(chat, client?.server.label, paidUntil, !!client.trial_used)
   }
 
   private async promo(from: User, chat: Chat, message: string) {
