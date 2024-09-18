@@ -122,7 +122,6 @@ class Telegram {
 
       tgLogger.log(from, `✅ Client created server [${server.name}]`)
 
-      if (!response.public_key) return this.error(from, chat, "[public_key] not found")
       return this.db.saveClient(from, chat, server.id, response.public_key)
     } catch (error: any) {
       this.error(from, chat, error.message)
@@ -165,7 +164,6 @@ class Telegram {
 
       tgLogger.log(from, `✅ Client created server [${serverName}]`)
 
-      if (!response.public_key) return this.error(from, chat, "[public_key] not found")
       this.db.updateClientServer(from, server.id, response.public_key)
 
       if (client?.server) {
@@ -205,8 +203,6 @@ class Telegram {
   private async sendFiles(chatId: number, userName: string, conf: string, qr: string) {
     await this.bot.sendDocument(chatId, Buffer.from(conf, "base64"), {}, { filename: `fídar-vpn-${userName}.conf` })
     await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fídar-vpn-${userName}` })
-
-    await new Promise(resolve => setTimeout(resolve, 1000))
   }
 
   private async promo(from: User, chat: Chat, message: string) {
