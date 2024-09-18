@@ -166,11 +166,7 @@ class Telegram {
 
       this.db.updateClientServer(from, server.id, response.public_key)
 
-      if (client?.server) {
-        const response = await disableClient(client.server.ip, from.id)
-        if (!response?.success)
-          return this.error(from, chat, `Error with client [${client.id}] deleting from [${serverName}]`)
-      }
+      if (client?.server) await disableClient(client.server.ip, from.id)
     } catch (error: any) {
       this.error(from, chat, error.message)
     }

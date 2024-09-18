@@ -30,22 +30,18 @@ export const createClient = async (ip: string, id: number): Promise<CreateClient
     )
     return response.data
   } catch (e: any) {
-    error(e.message)
-    console.log(e)
+    error(e.response.data)
     throw new Error(e.message)
   }
 }
 
-export const disableClient = async (ip: string, id: number): Promise<RevokeClientResponse> => {
+export const disableClient = async (ip: string, id: number): Promise<void> => {
   try {
-    const response = await axios.delete<RevokeClientResponse>(`http://${ip}:${config.serversPort}/client/${id}`, {
+    await axios.delete<RevokeClientResponse>(`http://${ip}:${config.serversPort}/client/${id}`, {
       timeout: 5_000
     })
-    return response.data
   } catch (e: any) {
-    error(e.message)
-    console.log(e)
-    throw new Error(e.message)
+    error(e.response.data)
   }
 }
 
@@ -58,8 +54,7 @@ export const enableClient = async (ip: string, id: number, publicKey: string): P
     )
     return response.data
   } catch (e: any) {
-    error(e.message)
-    console.log(e)
+    error(e.response.data)
     throw new Error(e.message)
   }
 }
