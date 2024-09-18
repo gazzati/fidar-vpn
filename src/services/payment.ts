@@ -90,7 +90,7 @@ class PaymentService {
 
   public async renewSubscription(client: Client, newExpiredAt: string): Promise<boolean> {
     try {
-      this.db.updateClientExpiredAt(client.id, newExpiredAt)
+      this.db.updateClientExpiredAt(client.user_id, newExpiredAt)
 
       if (client.public_key) {
         const response = await enableClient(client.server.ip, client.user_id, client.public_key)

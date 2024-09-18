@@ -45,9 +45,9 @@ class DbService {
     )
   }
 
-  public updateClientExpiredAt(clientId: number, expiredAt: string) {
+  public updateClientExpiredAt(userId: number, expiredAt: string) {
     entities.Client.update(
-      { user_id: clientId },
+      { user_id: userId },
       {
         expired_at: expiredAt,
         trial_used: true,
