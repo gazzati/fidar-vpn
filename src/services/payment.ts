@@ -1,8 +1,7 @@
-import TelegramBot, { Chat, PreCheckoutQuery, Message } from "node-telegram-bot-api"
+import TelegramBot, { Chat, User, PreCheckoutQuery, Message } from "node-telegram-bot-api"
 
 import config from "@root/config"
 
-import { Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import { tgLogger, error } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
@@ -60,7 +59,13 @@ class PaymentService {
     tgLogger.log(from, `🔥 Successful payment amount: [${tariff / 100}]`)
   }
 
-  public async invoice(chat: Chat, client: Client, tariff: PayTariff) {
+  public async invoice(from: User, chat: Chat, tariff: PayTariff) {
+    const client = await this.db.getClient(from)
+    if (!client) {
+      error("Client not found", chat)
+      return this.messages.sendServerError(chat)
+    }
+
     const tariffName = getTariffName(tariff)
     const months = getTariffMonths(tariff)
 

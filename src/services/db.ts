@@ -4,6 +4,7 @@ import { entities } from "@database/data-source"
 import type { Client } from "@database/entities/Client"
 import type { Promo } from "@database/entities/Promo"
 import type { Server } from "@database/entities/Server"
+import { getTrialExpiredAt } from "@helpers/date"
 
 import type { User, Chat } from "node-telegram-bot-api"
 
@@ -16,7 +17,9 @@ class DbService {
     return entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
   }
 
-  public saveClient(from: User, chat: Chat, serverId: number, publicKey: string, expiredAt: Date): Promise<Client> {
+  public saveClient(from: User, chat: Chat, serverId: number, publicKey: string): Promise<Client> {
+    const expiredAt = getTrialExpiredAt()
+
     return entities.Client.save({
       user_id: from.id,
       chat_id: chat.id,
@@ -53,7 +56,11 @@ class DbService {
   }
 
   public getServer(name: string): Promise<Server | null> {
-    return entities.Server.findOne({ where: { name } })
+    return entities.Server.findOne({ where: { name, active: true } })
+  }
+
+  public getDefaultServer(): Promise<Server | null> {
+    return entities.Server.findOne({ where: { default: true } })
   }
 
   public getServersForClient(client: Client | null): Promise<Array<Server>> {

@@ -23,12 +23,12 @@ class MessageService {
     this.sendMessage(chat, config.phrases.START_MESSAGE, inlineKeyboard)
   }
 
-  public sendLocation(chat: Chat, servers: Array<Server>, exist: boolean) {
-    const data = servers.map(server => ({ text: server.label, callback_data: `create:${server.name}` }))
-    this.sendMessage(chat, exist ? config.phrases.LOCATION_WITH_EXIST_MESSAGE : config.phrases.LOCATION_MESSAGE, [
-      data,
-      exist ? config.inlineKeyboardItem.subscription : []
-    ])
+  public sendLocations(chat: Chat, servers: Array<Server>) {
+    const data = servers.map(server => ({
+      text: server.label,
+      callback_data: `${config.callbackData.changeServer}:${server.name}`
+    }))
+    this.sendMessage(chat, config.phrases.CHANGE_SERVER_MESSAGE, [data, config.inlineKeyboardItem.subscription])
   }
 
   public async sendPay(from: User, chat: Chat) {
@@ -47,7 +47,7 @@ class MessageService {
       `📌└ Статус подписки: активная${trialUser ? "" : "(пробная)"} \n🌐└ Сервер: ${serverLabel}\n💵└ Оплачено до: ${
         paidUntil || "-"
       }`,
-      [config.inlineKeyboardItem.pay, config.inlineKeyboardItem.location, config.inlineKeyboardItem.files]
+      [config.inlineKeyboardItem.pay, config.inlineKeyboardItem.locations, config.inlineKeyboardItem.files]
     )
   }
 
@@ -71,9 +71,8 @@ class MessageService {
     this.sendMessage(chat, config.phrases.HELP_MESSAGE)
   }
 
-  public sendNotFound(from: User, chat: Chat) {
-    this.sendMessage(chat, config.phrases.NOT_FOUND_MESSAGE, [
-      config.inlineKeyboardItem.location,
+  public sendSubscriptionNotFound(from: User, chat: Chat) {
+    this.sendMessage(chat, config.phrases.SUBSCRIPTION_NOT_FOUND_MESSAGE, [
       config.inlineKeyboardItem.pay,
       config.inlineKeyboardItem.main
     ])
@@ -87,7 +86,7 @@ class MessageService {
   public sendSuccessfulPayment(chat: Chat, paidUntil: string | null) {
     this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PAYMENT_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
       config.inlineKeyboardItem.subscription,
-      config.inlineKeyboardItem.location,
+      config.inlineKeyboardItem.locations,
       config.inlineKeyboardItem.main
     ])
   }
@@ -95,17 +94,13 @@ class MessageService {
   public sendSuccessfulPromo(chat: Chat, paidUntil: string | null) {
     this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PROMO_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
       config.inlineKeyboardItem.subscription,
-      config.inlineKeyboardItem.location,
+      config.inlineKeyboardItem.locations,
       config.inlineKeyboardItem.main
     ])
   }
 
-  public sendAlreadyExistError(chat: Chat) {
-    this.sendMessage(chat, config.phrases.ALREADY_EXIST_MESSAGE)
-  }
-
   public sendServerError(chat: Chat) {
-    this.sendMessage(chat, config.phrases.ERROR_MESSAGE)
+    this.sendMessage(chat, config.phrases.ERROR_MESSAGE, [config.inlineKeyboardItem.main])
   }
 
   private sendMessage(chat: Chat, message: string, inlineKeyboard?: Array<Array<InlineKeyboardButton>>) {

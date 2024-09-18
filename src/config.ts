@@ -22,15 +22,16 @@ if (error) new Error(`Config validation error: ${error.message}`)
 
 const callbackData = {
   start: "start",
-  create: "create",
+  changeServer: "change-server",
   manual: "manual",
   files: "files",
-  location: "location",
+  locations: "locations",
   subscription: "subscription",
   pay: "pay",
   tariff: "tariff",
   support: "support",
-  promo: "promo"
+  promo: "promo",
+  trial: "trial"
 }
 
 export default {
@@ -49,14 +50,12 @@ export default {
   phrases: {
     START_MESSAGE:
       "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой и SberPay",
-    LOCATION_MESSAGE: "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n",
-    LOCATION_WITH_EXIST_MESSAGE:
+    CHANGE_SERVER_MESSAGE:
       "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n⚠️ Обратите внимание, после изменения локации предыдущий файл подключения свою работу прекращает",
     HELP_MESSAGE: "По всем вопросам пиши @gazzati",
     ERROR_MESSAGE: "🤷‍♂️ Что то пошло не так, попробуйте повторить позже",
-    ALREADY_EXIST_MESSAGE: "🤝 У вас уже есть конфигурация",
     DONE_MESSAGE: "✅ Готово, отсканируй QR код с конфигурацией или используй файл с конфигурацией",
-    NOT_FOUND_MESSAGE: "🙅 У вас нет подписки",
+    SUBSCRIPTION_NOT_FOUND_MESSAGE: "🙅 У вас нет подписки",
     PAY_MESSAGE: "💵 Выберите сумму для пополнения: \n\nОплата возможна Банковской картой и SberPay",
     PAY_NEW_USER_MESSAGE: "🫶 Мы ценим наших клиентов и поэтому рекомендуем сначала воспользоваться бесплатным периодом",
     NEED_PAY_MESSAGE: "💵 Необходимо произвести оплату",
@@ -77,11 +76,11 @@ export default {
   inlineKeyboardItem: {
     subscription: [{ text: "📌 Моя подписка", callback_data: callbackData.subscription }],
     main: [{ text: "🔙 Вернуться на главную", callback_data: callbackData.start }],
-    trial: [{ text: "🎁 Пробная подписка", callback_data: callbackData.location }],
+    trial: [{ text: "🎁 Пробная подписка", callback_data: callbackData.trial }],
     pay: [{ text: "💵 Оплатить", callback_data: callbackData.pay }],
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],
     files: [{ text: "💾 Скачать данные для подключения", callback_data: callbackData.files }],
-    location: [{ text: "📍 Выбрать локацию", callback_data: callbackData.location }],
+    locations: [{ text: "📍 Выбрать локацию", callback_data: callbackData.locations }],
     manual: [{ text: "📝 Инструкция", callback_data: callbackData.manual }]
   },
 

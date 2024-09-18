@@ -19,6 +19,9 @@ export class Server {
   @Column({ default: true })
   active: boolean
 
+  @Column({ default: false })
+  default: boolean
+
   @OneToMany(() => Client, client => client.server)
   clients: Array<Client>
 

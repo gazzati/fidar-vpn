@@ -1,4 +1,4 @@
-import { revokeClient } from "@api/server"
+import { disableClient } from "@api/server"
 import { sendMessage } from "@api/tg"
 import { LessThan, Not, IsNull } from "typeorm"
 
@@ -23,7 +23,7 @@ class ClientsCleaner extends Base {
       const userId = client.user_id
 
       try {
-        revokeClient(client.server.ip, userId)
+        disableClient(client.server.ip, userId)
 
         this.entities.Client.update(
           { user_id: userId },
