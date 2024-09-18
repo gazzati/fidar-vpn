@@ -6,10 +6,12 @@ import config from "@root/config"
 
 import Base from "./base"
 
-class ClientsCleaner extends Base {
+class ClientsDisabler extends Base {
   public async loop() {
+    const now = new Date()
+
     const clients = await this.entities.Client.find({
-      where: { expired_at: LessThan(new Date()), active: true },
+      where: { expired_at: LessThan(now), active: true },
       relations: { server: true }
     })
     this.logger.log(clients)
@@ -45,4 +47,4 @@ class ClientsCleaner extends Base {
   }
 }
 
-export default ClientsCleaner
+export default ClientsDisabler

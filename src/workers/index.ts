@@ -1,5 +1,7 @@
 import "../aliases"
 
-import ClientsCleaner from "./clients-cleaner"
+import ClientsDisabler from "./clients-disabler"
+import ExpireReminder from "./expire-reminder"
 
-new ClientsCleaner({ name: "Clients cleaner", pauseSec: 60 * 60 }).main()
+new ClientsDisabler({ name: "Clients disabler", pauseSec: 60 * 60 }).main()
+new ExpireReminder({ name: "Expire reminder", pauseSec: 60 * 60 }).main()
