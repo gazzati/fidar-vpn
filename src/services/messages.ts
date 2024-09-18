@@ -33,7 +33,7 @@ class MessageService {
 
   public async sendPay(from: User, chat: Chat) {
     const client = await this.db.getClient(from)
-    if (!client) return this.sendMessage(chat, config.phrases.PAY_NEW_USER_MESSAGE, [config.inlineKeyboardItem.main])
+    if (!client) return this.sendMessage(chat, config.phrases.PAY_NEW_USER_MESSAGE, [config.inlineKeyboardItem.trial, config.inlineKeyboardItem.support])
 
     this.sendMessage(chat, config.phrases.PAY_MESSAGE, [
       ...config.inlineKeyboard.tariffs,
@@ -74,7 +74,7 @@ class MessageService {
   public sendSubscriptionNotFound(from: User, chat: Chat) {
     this.sendMessage(chat, config.phrases.SUBSCRIPTION_NOT_FOUND_MESSAGE, [
       config.inlineKeyboardItem.trial,
-      config.inlineKeyboardItem.main
+      config.inlineKeyboardItem.support
     ])
     tgLogger.error(from, "User not found")
   }
