@@ -57,6 +57,7 @@ export const enableClient = async (ip: string, id: number, publicKey: string): P
     return response.data
   } catch (e: any) {
     error(e.message)
+    console.log(e)
     throw new Error(e.message)
   }
 }
