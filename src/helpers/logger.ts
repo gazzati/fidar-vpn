@@ -39,7 +39,7 @@ export const log = (...args: Array<any>) => {
 export const error = (...args: Array<any>) => {
   const dateLog = getLogDate()
   console.log(`${Color.Red}${dateLog}`, ...args)
-  sendMessage(`❌ ${args}`)
+  sendMessage(`❌ ${JSON.stringify(args)}`)
 }
 
 export const tgLogger = {
@@ -75,7 +75,7 @@ class Logger {
   error(...args: Array<any>) {
     const dateLog = getLogDate()
     console.log(`${Color.Red}${dateLog} ${Color.Yellow}[${this.name}]`, ...args)
-    sendMessage(`❌ ${this.name} - ${args}`)
+    sendMessage(`❌ ${this.name} - ${JSON.stringify(args)}`)
   }
 }
 
