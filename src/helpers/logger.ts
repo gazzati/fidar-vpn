@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+import { sendMessage } from "@api/systemTg"
 import { User } from "node-telegram-bot-api"
 
 enum Color {
@@ -38,6 +39,7 @@ export const log = (...args: Array<any>) => {
 export const error = (...args: Array<any>) => {
   const dateLog = getLogDate()
   console.log(`${Color.Red}${dateLog}`, ...args)
+  sendMessage(`❌ ${args}`)
 }
 
 export const tgLogger = {
@@ -48,6 +50,7 @@ export const tgLogger = {
     const user = `👨‍💻 [${from.id}] ${userDetails}`
 
     console.log(`${Color.Cyan}${dateLog} ${Color.Green}${user} -> ${Color.Magenta}`, message)
+    sendMessage(`ℹ️ ${user} - ${message}`)
   },
 
   error(from: User, message: any) {
@@ -57,6 +60,7 @@ export const tgLogger = {
     const user = `👨‍💻 [${from.id}] ${userDetails}`
 
     console.log(`${Color.Red}${dateLog} ${user} ❌`, message)
+    sendMessage(`❌ ${user} - ${message}`)
   }
 }
 
@@ -71,6 +75,7 @@ class Logger {
   error(...args: Array<any>) {
     const dateLog = getLogDate()
     console.log(`${Color.Red}${dateLog} ${Color.Yellow}[${this.name}]`, ...args)
+    sendMessage(`❌ ${this.name} - ${args}`)
   }
 }
 

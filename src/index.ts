@@ -192,7 +192,7 @@ class Telegram {
     if (!client?.server) return this.messages.sendSubscriptionNotFound(from, chat)
 
     const response = await createClient(client.server.ip, userId)
-    if (!response.success || !response.already_exist) throw Error("Not find already created client") //TODO: make endpoint for files
+    if (!response.success || !response.already_exist) return this.error(from, chat, "Not find already created client") //TODO: make endpoint for files
 
     await this.sendFiles(chat.id, from.username || from.id.toString(), client.server.name, response.conf, response.qr)
 

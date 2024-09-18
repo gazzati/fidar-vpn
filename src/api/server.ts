@@ -2,6 +2,8 @@ import axios from "axios"
 
 import config from "@root/config"
 
+import { error } from "@helpers/logger"
+
 export interface CreateClientResponse {
   success: boolean
   conf: string
@@ -28,6 +30,7 @@ export const createClient = async (ip: string, id: number): Promise<CreateClient
     )
     return response.data
   } catch (e: any) {
+    error(e.message)
     throw new Error(e.message)
   }
 }
@@ -39,6 +42,7 @@ export const disableClient = async (ip: string, id: number): Promise<RevokeClien
     })
     return response.data
   } catch (e: any) {
+    error(e.message)
     throw new Error(e.message)
   }
 }
@@ -52,6 +56,7 @@ export const enableClient = async (ip: string, id: number, publicKey: string): P
     )
     return response.data
   } catch (e: any) {
+    error(e.message)
     throw new Error(e.message)
   }
 }

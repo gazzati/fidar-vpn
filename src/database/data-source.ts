@@ -5,7 +5,7 @@ import config from "@root/config"
 import { Client } from "@database/entities/Client"
 import { Promo } from "@database/entities/Promo"
 import { Server } from "@database/entities/Server"
-import { log } from "@helpers/logger"
+import { log, error } from "@helpers/logger"
 
 export const AppDataSource = new DataSource({
   type: "postgres",
@@ -23,7 +23,7 @@ export const AppDataSource = new DataSource({
 
 AppDataSource.initialize()
   .then(() => log(`💾 Connected to the database: ${config.psqlDatabase} \n`))
-  .catch(error => console.error(error))
+  .catch(e => error(e))
 
 export const entities = {
   Server: AppDataSource.getRepository(Server),

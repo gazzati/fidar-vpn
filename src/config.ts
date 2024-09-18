@@ -7,6 +7,8 @@ dotenv.config()
 
 const envVarsSchema = Joi.object({
   TELEGRAM_TOKEN: Joi.string().description("Telegram token"),
+  SYSTEM_TELEGRAM_TOKEN: Joi.string().description("System telegram token"),
+  SYSTEM_TELEGRAM_CHAT_ID: Joi.string().description("System telegram chat id"),
 
   PSQL_HOST: Joi.string().default("localhost").description("Database Host"),
   PSQL_DATABASE: Joi.string().default("database").description("Database Name"),
@@ -36,6 +38,8 @@ const callbackData = {
 
 export default {
   telegramToken: envVars.TELEGRAM_TOKEN,
+  systemTelegramToken: envVars.SYSTEM_TELEGRAM_TOKEN,
+  systemTelegramChatId: Number(envVars.SYSTEM_TELEGRAM_CHAT_ID),
 
   psqlHost: envVars.PSQL_HOST,
   psqlDatabase: envVars.PSQL_DATABASE,
