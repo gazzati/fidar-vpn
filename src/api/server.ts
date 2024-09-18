@@ -7,6 +7,7 @@ export interface CreateClientResponse {
   conf: string
   qr: string
   already_exist?: boolean
+  public_key?: string
 }
 
 export interface RevokeClientResponse {

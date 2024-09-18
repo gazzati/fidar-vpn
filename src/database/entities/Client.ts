@@ -36,6 +36,9 @@ export class Client {
   @JoinColumn({ name: "server_id", referencedColumnName: "id" })
   server: Server
 
+  @Column({ nullable: true })
+  public_key: string
+
   @Column()
   expired_at: Date
 

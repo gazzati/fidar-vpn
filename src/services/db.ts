@@ -16,11 +16,12 @@ class DbService {
     return entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
   }
 
-  public saveClient(from: User, chat: Chat, serverId: number, expiredAt: Date): Promise<Client> {
+  public saveClient(from: User, chat: Chat, serverId: number, publicKey: string, expiredAt: Date): Promise<Client> {
     return entities.Client.save({
       user_id: from.id,
       chat_id: chat.id,
       server: { id: serverId },
+      public_key: publicKey,
       expired_at: expiredAt,
       ...(from.username && { username: from.username }),
       ...(from.first_name && { first_name: from.first_name }),
@@ -28,11 +29,12 @@ class DbService {
     })
   }
 
-  public updateClientServer(from: User, serverId: number) {
+  public updateClientServer(from: User, serverId: number, publicKey: string) {
     entities.Client.update(
       { user_id: from.id },
       {
         server: { id: serverId },
+        public_key: publicKey,
         ...(from.username && { username: from.username }),
         ...(from.first_name && { first_name: from.first_name }),
         ...(from.last_name && { last_name: from.last_name })

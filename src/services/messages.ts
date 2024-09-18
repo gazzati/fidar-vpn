@@ -44,7 +44,9 @@ class MessageService {
   public sendSubscription(chat: Chat, serverLabel: string, paidUntil: string | null, trialUser: boolean) {
     this.sendMessage(
       chat,
-      `📌└ Статус подписки: активная${trialUser ? '' : '(пробная)'} \n🌐└ Сервер: ${serverLabel}\n💵└ Оплачено до: ${paidUntil || "-"}`,
+      `📌└ Статус подписки: активная${trialUser ? "" : "(пробная)"} \n🌐└ Сервер: ${serverLabel}\n💵└ Оплачено до: ${
+        paidUntil || "-"
+      }`,
       [config.inlineKeyboardItem.pay, config.inlineKeyboardItem.location, config.inlineKeyboardItem.files]
     )
   }

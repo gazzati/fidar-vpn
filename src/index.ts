@@ -152,14 +152,17 @@ class Telegram {
 
       tgLogger.log(from, `✅ Client created server [${serverName}]`)
 
+      if (response.already_exist) return
+      if (!response.public_key) return this.error(from, chat, "[public_key] not found")
+
       if (client?.server) {
         const response = await revokeClient(client.server.ip, userId)
         if (!response?.success)
           return this.error(from, chat, `Error with client [${client.id}] deleting from [${serverName}]`)
       }
 
-      if (!client) return this.db.saveClient(from, chat, server.id, getTrialExpiredAt())
-      this.db.updateClientServer(from, server.id)
+      if (!client) return this.db.saveClient(from, chat, server.id, response.public_key, getTrialExpiredAt())
+      this.db.updateClientServer(from, server.id, response.public_key)
     } catch (error: any) {
       this.error(from, chat, error)
     }
@@ -196,7 +199,7 @@ class Telegram {
     if (!client?.server) return this.messages.sendNotFound(from, chat)
 
     const response = await createClient(client.server.ip, userId)
-    if (!response.success || !response.already_exist) throw Error("Find already created client")
+    if (!response.success || !response.already_exist) throw Error("Not find already created client")
 
     await this.sendFiles(chat.id, from.username || from.id.toString(), response.conf, response.qr)
 
