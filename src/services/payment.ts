@@ -1,7 +1,9 @@
+import { enableClient } from "@api/server"
 import TelegramBot, { Chat, User, PreCheckoutQuery, Message } from "node-telegram-bot-api"
 
 import config from "@root/config"
 
+import { Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import { tgLogger, error } from "@helpers/logger"
 import { getTariffName, getTariffMonths } from "@helpers/tariff"
@@ -42,8 +44,8 @@ class PaymentService {
       return this.messages.sendServerError(chat)
     }
 
-    const client = await this.db.getClient(from)
-    if (!client) {
+    const client = await this.db.getClientWithServer(from)
+    if (!client?.server) {
       error("Client not found", chat)
       return this.messages.sendServerError(chat)
     }
@@ -52,10 +54,13 @@ class PaymentService {
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
+    const success = await this.renewSubscription(client, dbDate(newExpiredAt))
+    if (!success) {
+      error("Subscription renew error", chat)
+      return this.messages.sendServerError(chat)
+    }
+
     this.messages.sendSuccessfulPayment(chat, paidUntil)
-
-    this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))
-
     tgLogger.log(from, `🔥 Successful payment amount: [${tariff / 100}]`)
   }
 
@@ -81,6 +86,22 @@ class PaymentService {
       config.currency,
       [{ label: tariffName, amount: tariff * 100 }]
     )
+  }
+
+  public async renewSubscription(client: Client, newExpiredAt: string): Promise<boolean> {
+    try {
+      this.db.updateClientExpiredAt(client.id, newExpiredAt)
+
+      if (client.public_key) {
+        const response = await enableClient(client.server.ip, client.user_id, client.public_key)
+        if (!response) return false
+      }
+
+      return true
+    } catch (e) {
+      error("Subscription renew error", e)
+      return false
+    }
   }
 }
 

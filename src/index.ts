@@ -181,7 +181,7 @@ class Telegram {
     if (!client?.server) return this.messages.sendSubscriptionNotFound(from, chat)
 
     const paidUntil = getSubscriptionExpiredDate(client.expired_at)
-    this.messages.sendSubscription(chat, client?.server.label, paidUntil, !!client.trial_used)
+    this.messages.sendSubscription(chat, client?.server.label, paidUntil, client.active)
     if (messageId) this.bot.deleteMessage(chat.id, messageId)
   }
 
@@ -201,7 +201,12 @@ class Telegram {
   }
 
   private async sendFiles(chatId: number, userName: string, serverName: string, conf: string, qr: string) {
-    await this.bot.sendDocument(chatId, Buffer.from(conf, "base64"), {}, { filename: `fídar-${userName}-${serverName}.conf` })
+    await this.bot.sendDocument(
+      chatId,
+      Buffer.from(conf, "base64"),
+      {},
+      { filename: `fídar-${userName}-${serverName}.conf` }
+    )
     await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fídar-${userName}-${serverName}` })
   }
 
@@ -209,7 +214,7 @@ class Telegram {
     this.bot.sendChatAction(chat.id, "typing")
     tgLogger.log(from, `📩 Message(promo) ${message}`)
 
-    const client = await this.db.getClient(from)
+    const client = await this.db.getClientWithServer(from)
     if (!client) return this.messages.sendSubscriptionNotFound(from, chat)
 
     const promo = await this.db.getMatchedPromo(message)
@@ -218,7 +223,8 @@ class Telegram {
     const newExpiredAt = getNewExpiredAt(client.expired_at, promo.months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
-    this.db.updateClientExpiredAt(from, dbDate(newExpiredAt))
+    const success = await this.payment.renewSubscription(client, dbDate(newExpiredAt))
+    if (!success) return this.error(from, chat, "Subscription renew error")
 
     this.messages.sendSuccessfulPromo(chat, paidUntil)
     tgLogger.log(from, `🏷️ Successful promo use [${promo.value}]`)

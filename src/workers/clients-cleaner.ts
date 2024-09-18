@@ -1,6 +1,6 @@
 import { disableClient } from "@api/server"
 import { sendMessage } from "@api/tg"
-import { LessThan, Not, IsNull } from "typeorm"
+import { LessThan } from "typeorm"
 
 import config from "@root/config"
 
@@ -9,7 +9,7 @@ import Base from "./base"
 class ClientsCleaner extends Base {
   public async loop() {
     const clients = await this.entities.Client.find({
-      where: { expired_at: LessThan(new Date()), server: Not(IsNull()) },
+      where: { expired_at: LessThan(new Date()), active: true },
       relations: { server: true }
     })
     this.logger.log(clients)
@@ -28,8 +28,7 @@ class ClientsCleaner extends Base {
         this.entities.Client.update(
           { user_id: userId },
           {
-            //@ts-ignore
-            server: null,
+            active: false,
             trial_used: true
           }
         )

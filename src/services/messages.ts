@@ -33,7 +33,11 @@ class MessageService {
 
   public async sendPay(from: User, chat: Chat) {
     const client = await this.db.getClient(from)
-    if (!client) return this.sendMessage(chat, config.phrases.PAY_NEW_USER_MESSAGE, [config.inlineKeyboardItem.trial, config.inlineKeyboardItem.support])
+    if (!client)
+      return this.sendMessage(chat, config.phrases.PAY_NEW_USER_MESSAGE, [
+        config.inlineKeyboardItem.trial,
+        config.inlineKeyboardItem.support
+      ])
 
     this.sendMessage(chat, config.phrases.PAY_MESSAGE, [
       ...config.inlineKeyboard.tariffs,
@@ -41,10 +45,10 @@ class MessageService {
     ])
   }
 
-  public sendSubscription(chat: Chat, serverLabel: string, paidUntil: string | null, trialUser: boolean) {
+  public sendSubscription(chat: Chat, serverLabel: string, paidUntil: string | null, active: boolean) {
     this.sendMessage(
       chat,
-      `📌└ Статус подписки: ${trialUser ? "активная" : "пробная"} \n🌐└ Сервер: ${serverLabel}\n💵└ Оплачено до: ${
+      `📌└ Статус подписки: ${active ? "активная" : "не активная"} \n🌐└ Сервер: ${serverLabel}\n💵└ Оплачено до: ${
         paidUntil || "Просрочено"
       }`,
       [config.inlineKeyboardItem.pay, config.inlineKeyboardItem.locations, config.inlineKeyboardItem.files]
@@ -60,7 +64,10 @@ class MessageService {
   }
 
   public sendDone(chat: Chat) {
-    this.sendMessage(chat, config.phrases.DONE_MESSAGE, [config.inlineKeyboardItem.manual, config.inlineKeyboardItem.main])
+    this.sendMessage(chat, config.phrases.DONE_MESSAGE, [
+      config.inlineKeyboardItem.manual,
+      config.inlineKeyboardItem.main
+    ])
   }
 
   public sendManual(chat: Chat) {
@@ -73,7 +80,7 @@ class MessageService {
 
   public sendSubscriptionNotFound(from: User, chat: Chat) {
     this.sendMessage(chat, config.phrases.SUBSCRIPTION_NOT_FOUND_MESSAGE, [
-      config.inlineKeyboardItem.trial,
+      config.inlineKeyboardItem.main,
       config.inlineKeyboardItem.support
     ])
     tgLogger.error(from, "User not found")

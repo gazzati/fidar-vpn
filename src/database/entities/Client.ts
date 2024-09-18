@@ -31,7 +31,7 @@ export class Client {
   last_name: string
 
   @ManyToOne(() => Server, server => server.clients, {
-    nullable: true
+    nullable: false
   })
   @JoinColumn({ name: "server_id", referencedColumnName: "id" })
   server: Server
@@ -44,6 +44,9 @@ export class Client {
 
   @Column({ default: false })
   trial_used: boolean
+
+  @Column({ default: true })
+  active: boolean
 
   @Column()
   @CreateDateColumn()

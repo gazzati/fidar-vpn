@@ -43,11 +43,13 @@ export const disableClient = async (ip: string, id: number): Promise<RevokeClien
   }
 }
 
-export const enableClient = async (ip: string, id: number): Promise<RevokeClientResponse> => {
+export const enableClient = async (ip: string, id: number, publicKey: string): Promise<RevokeClientResponse> => {
   try {
-    const response = await axios.delete<RevokeClientResponse>(`http://${ip}:${config.serversPort}/client/${id}`, {
-      timeout: 5_000
-    })
+    const response = await axios.post<RevokeClientResponse>(
+      `http://${ip}:${config.serversPort}/client/enable`,
+      { id, public_key: publicKey },
+      { timeout: 5_000 }
+    )
     return response.data
   } catch (e: any) {
     throw new Error(e.message)
