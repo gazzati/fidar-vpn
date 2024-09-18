@@ -11,7 +11,7 @@ class ExpireReminder extends Base {
     now.setDate(now.getDate() + 1)
 
     const clients = await this.entities.Client.find({
-      where: { expired_at: LessThan(now), active: true },
+      where: { expired_at: LessThan(now), active: true, was_reminded: false },
       relations: { server: true }
     })
 
@@ -19,6 +19,13 @@ class ExpireReminder extends Base {
 
     for (const client of clients) {
       try {
+        this.entities.Client.update(
+          { user_id: client.user_id },
+          {
+            was_reminded: true
+          }
+        )
+
         sendMessage(
           client.chat_id.toString(),
           !client.trial_used ? config.phrases.REMINDER_TRIAL_MESSAGE : config.phrases.REMINDER_SUBSCRIPTION_MESSAGE,

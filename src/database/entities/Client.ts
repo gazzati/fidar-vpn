@@ -48,6 +48,9 @@ export class Client {
   @Column({ default: true })
   active: boolean
 
+  @Column({ default: false })
+  was_reminded: boolean
+
   @Column()
   @CreateDateColumn()
   created_at: Date
