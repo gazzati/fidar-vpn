@@ -115,7 +115,7 @@ class Telegram {
       const response = await createClient(server.ip, from.id)
       if (!response.success) return this.error(from, chat, `Client creation error server [${server.name}]`)
 
-      await this.sendFiles(chat.id, from.username || from.id.toString(), response.conf, response.qr)
+      await this.sendFiles(chat.id, from.username || from.id.toString(), server.name, response.conf, response.qr)
 
       this.messages.sendDone(chat)
       this.bot.deleteMessage(chat.id, messageId)
@@ -157,7 +157,7 @@ class Telegram {
       const response = await createClient(server.ip, from.id)
       if (!response.success) return this.error(from, chat, `Client creation error server [${server.name}]`)
 
-      await this.sendFiles(chat.id, from.username || from.id.toString(), response.conf, response.qr)
+      await this.sendFiles(chat.id, from.username || from.id.toString(), server.name, response.conf, response.qr)
 
       this.messages.sendDone(chat)
       this.bot.deleteMessage(chat.id, messageId)
@@ -194,15 +194,15 @@ class Telegram {
     const response = await createClient(client.server.ip, userId)
     if (!response.success || !response.already_exist) throw Error("Not find already created client") //TODO: make endpoint for files
 
-    await this.sendFiles(chat.id, from.username || from.id.toString(), response.conf, response.qr)
+    await this.sendFiles(chat.id, from.username || from.id.toString(), client.server.name, response.conf, response.qr)
 
     this.messages.sendDone(chat)
     this.bot.deleteMessage(chat.id, messageId)
   }
 
-  private async sendFiles(chatId: number, userName: string, conf: string, qr: string) {
-    await this.bot.sendDocument(chatId, Buffer.from(conf, "base64"), {}, { filename: `fídar-vpn-${userName}.conf` })
-    await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fídar-vpn-${userName}` })
+  private async sendFiles(chatId: number, userName: string, serverName: string, conf: string, qr: string) {
+    await this.bot.sendDocument(chatId, Buffer.from(conf, "base64"), {}, { filename: `fídar-${userName}-${serverName}.conf` })
+    await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fídar-${userName}-${serverName}` })
   }
 
   private async promo(from: User, chat: Chat, message: string) {
