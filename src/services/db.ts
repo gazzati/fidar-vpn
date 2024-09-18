@@ -50,7 +50,8 @@ class DbService {
       { user_id: clientId },
       {
         expired_at: expiredAt,
-        trial_used: true
+        trial_used: true,
+        active: true
       }
     )
   }
