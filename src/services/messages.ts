@@ -60,7 +60,7 @@ class MessageService {
   }
 
   public sendDone(chat: Chat) {
-    this.sendMessage(chat, config.phrases.DONE_MESSAGE, config.inlineKeyboard.manual)
+    this.sendMessage(chat, config.phrases.DONE_MESSAGE, [config.inlineKeyboardItem.manual, config.inlineKeyboardItem.main])
   }
 
   public sendManual(chat: Chat) {
