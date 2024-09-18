@@ -73,7 +73,7 @@ class MessageService {
 
   public sendSubscriptionNotFound(from: User, chat: Chat) {
     this.sendMessage(chat, config.phrases.SUBSCRIPTION_NOT_FOUND_MESSAGE, [
-      config.inlineKeyboardItem.pay,
+      config.inlineKeyboardItem.trial,
       config.inlineKeyboardItem.main
     ])
     tgLogger.error(from, "User not found")
