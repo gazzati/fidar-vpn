@@ -31,6 +31,7 @@ export const createClient = async (ip: string, id: number): Promise<CreateClient
     return response.data
   } catch (e: any) {
     error(e.message)
+    console.log(e)
     throw new Error(e.message)
   }
 }
@@ -43,6 +44,7 @@ export const disableClient = async (ip: string, id: number): Promise<RevokeClien
     return response.data
   } catch (e: any) {
     error(e.message)
+    console.log(e)
     throw new Error(e.message)
   }
 }
