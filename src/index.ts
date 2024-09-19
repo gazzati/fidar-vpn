@@ -23,8 +23,10 @@ export const COMMANDS: Array<string> = [
 class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
 
+  private waitingPromoIds: Array<number> = []
+
   private db = new DbService()
-  private messages = new MessageService(this.bot, this.db)
+  private messages = new MessageService(this.bot, this.db, this.waitingPromoIds)
   private payment = new PaymentService(this.bot, this.db, this.messages)
 
   public process() {
@@ -98,8 +100,10 @@ class Telegram {
       const [, tariff] = data.split(":") as [any, PayTariff]
       if (!tariff) return tgLogger.error(from, "Tariff not found")
 
-      await this.payment.invoice(from, chat, Number(tariff))
+      return await this.payment.invoice(from, chat, Number(tariff))
     }
+
+    return this.messages.sendStart(from, chat)
   }
 
   private async start(from: User, chat: Chat, messageId: number) {
@@ -209,6 +213,8 @@ class Telegram {
   private async promo(from: User, chat: Chat, message: string) {
     this.bot.sendChatAction(chat.id, "typing")
     tgLogger.log(from, `📩 Message(promo) ${message}`)
+
+    this.waitingPromoIds = this.waitingPromoIds.filter(id => id !== from.id)
 
     const client = await this.db.getClientWithServer(from)
     if (!client) return this.messages.sendSubscriptionNotFound(from, chat)

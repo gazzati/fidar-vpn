@@ -10,7 +10,7 @@ import type { User, Chat, InlineKeyboardButton } from "node-telegram-bot-api"
 import DbService from "./db"
 
 class MessageService {
-  constructor(private bot: TelegramBot, private db: DbService) {}
+  constructor(private bot: TelegramBot, private db: DbService, private waitingPromoIds: Array<number>) {}
 
   public async sendStart(from: User, chat: Chat) {
     const client = await this.db.getClient(from)
@@ -56,6 +56,7 @@ class MessageService {
   }
 
   public sendPromo(chat: Chat) {
+    this.waitingPromoIds.push(chat.id)
     this.sendMessage(chat, config.phrases.SEND_PROMO_MESSAGE)
   }
 
