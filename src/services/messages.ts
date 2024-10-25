@@ -56,6 +56,7 @@ class MessageService {
   }
 
   public sendPromo(chat: Chat) {
+    console.log("TEST", chat.id,  this.waitingPromoIds)
     this.waitingPromoIds.push(chat.id)
     this.sendMessage(chat, config.phrases.SEND_PROMO_MESSAGE)
   }

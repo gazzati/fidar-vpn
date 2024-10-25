@@ -211,7 +211,8 @@ class Telegram {
   }
 
   private async promo(from: User, chat: Chat, message: string) {
-    if(!this.waitingPromoIds.includes(from.id)) return
+    console.log("TEST 2", chat.id,  this.waitingPromoIds)
+    if(!this.waitingPromoIds.includes(chat.id)) return
 
     this.bot.sendChatAction(chat.id, "typing")
     tgLogger.log(from, `📩 Message(promo) ${message}`)
