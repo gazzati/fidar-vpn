@@ -217,8 +217,6 @@ class Telegram {
     this.bot.sendChatAction(chat.id, "typing")
     tgLogger.log(from, `📩 Message(promo) ${message}`)
 
-    this.waitingPromoIds = this.waitingPromoIds.filter(id => id !== from.id)
-
     const client = await this.db.getClientWithServer(from)
     if (!client) return this.messages.sendSubscriptionNotFound(from, chat)
 
@@ -230,6 +228,8 @@ class Telegram {
 
     const success = await this.payment.renewSubscription(client, dbDate(newExpiredAt))
     if (!success) return this.error(from, chat, "Subscription renew error")
+
+    this.waitingPromoIds = this.waitingPromoIds.filter(id => id !== from.id)
 
     this.messages.sendSuccessfulPromo(chat, paidUntil)
     tgLogger.log(from, `🏷️ Successful promo use [${promo.value}]`)
