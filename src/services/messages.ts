@@ -51,7 +51,12 @@ class MessageService {
       `📌└ Статус подписки: ${active ? "активная" : "не активная"} \n🌐└ Сервер: ${serverLabel}\n💵└ Оплачено до: ${
         paidUntil || "Просрочено"
       }`,
-      [config.inlineKeyboardItem.pay, config.inlineKeyboardItem.locations, config.inlineKeyboardItem.files]
+      [
+        config.inlineKeyboardItem.pay,
+        config.inlineKeyboardItem.locations,
+        config.inlineKeyboardItem.files,
+        config.inlineKeyboardItem.manual
+      ]
     )
   }
 
