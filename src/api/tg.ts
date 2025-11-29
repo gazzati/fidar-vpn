@@ -3,7 +3,7 @@ import { type InlineKeyboardButton } from "node-telegram-bot-api"
 
 import config from "@root/config"
 
-const baseUrl = `https://api.telegram.org/bot6103050379:AAHv4Im3LLmA45bn-MN2gRgkkCc6Fge3XLM`
+const baseUrl = `https://api.telegram.org/bot${config.telegramToken}`
 
 export const sendMessage = async (
   chatId: string,
@@ -19,5 +19,5 @@ export const sendMessage = async (
     },
     { timeout: 5_000 }
   )
-  return response?.data
+  return response.data
 }

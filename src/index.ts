@@ -12,7 +12,6 @@ import { PayTariff } from "@interfaces/pay"
 import { TelegramCommand } from "@interfaces/telegram"
 
 import config from "./config"
-import {sendMessage} from '@root/api/tg';
 
 export const COMMANDS: Array<string> = [
   TelegramCommand.Start,
@@ -240,3 +239,5 @@ class Telegram {
     this.messages.sendServerError(chat)
   }
 }
+
+new Telegram().process()
