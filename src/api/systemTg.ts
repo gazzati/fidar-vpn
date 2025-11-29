@@ -13,5 +13,5 @@ export const sendMessage = async (text: string): Promise<any> => {
     },
     { timeout: 5_000 }
   )
-  return response.data
+  return response?.data
 }

@@ -30,7 +30,7 @@ export const createClient = async (ip: string, id: number): Promise<CreateClient
     )
     return response.data
   } catch (e: any) {
-    error(`Server ID [${id}]`, e.response.data)
+    error(`Server ID [${id}]`, e.response?.data)
     throw new Error(e.message)
   }
 }
@@ -41,7 +41,7 @@ export const disableClient = async (ip: string, id: number): Promise<void> => {
       timeout: 5_000
     })
   } catch (e: any) {
-    error(`Server ID [${id}]`, e.response.data)
+    error(`Server ID [${id}]`, e.response?.data)
   }
 }
 
@@ -54,7 +54,7 @@ export const enableClient = async (ip: string, id: number, publicKey: string): P
     )
     return response.data
   } catch (e: any) {
-    error(`Server ID [${id}]`, e.response.data)
+    error(`Server ID [${id}]`, e.response?.data)
     throw new Error(e.message)
   }
 }

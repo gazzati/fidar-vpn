@@ -12,6 +12,7 @@ import { PayTariff } from "@interfaces/pay"
 import { TelegramCommand } from "@interfaces/telegram"
 
 import config from "./config"
+import {sendMessage} from '@root/api/tg';
 
 export const COMMANDS: Array<string> = [
   TelegramCommand.Start,
@@ -205,9 +206,9 @@ class Telegram {
       chatId,
       Buffer.from(conf, "base64"),
       {},
-      { filename: `fídar-${userName}-${serverName}.conf` }
+      { filename: `fidar-${userName}-${serverName}.conf` }
     )
-    await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fídar-${userName}-${serverName}` })
+    await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fidar-${userName}-${serverName}` })
   }
 
   private async promo(from: User, chat: Chat, message: string) {
@@ -240,4 +241,51 @@ class Telegram {
   }
 }
 
-new Telegram().process()
+
+
+
+const arr = [
+"873445517",
+"430047004",
+"207551129",
+"543553157",
+"633774984",
+"424188016",
+"258969394",
+"998619651",
+"571194368",
+"575152213",
+"6072778909",
+"79215481",
+"405146846",
+"480246885",
+"6308300453",
+"505252572",
+"296647591",
+"436587206",
+"370993136",
+"321838294",
+"255510863",
+"687678756",
+"6338950843",
+"324096487",
+"419514436",
+"4747807537",
+"465939459",
+"7898553771",
+"1991776368",
+"521484362",
+"430886694",
+]
+
+const test = () => {
+  arr.forEach(a => {
+    sendMessage(
+      a,
+      "С Новым годом, дорогие друзья! 🎉 \n\nПусть 2024 год принесет вам радость, успех и множество новых возможностей! Я всегда рядом, чтобы поддержать вас на этом пути. Желаю, чтобы каждый день был наполнен вдохновением и счастьем!\n\nС наилучшими пожеланиями, ваша Дзера! ✨",
+    ).then(r => console.log(r))
+  })
+
+}
+
+test()
