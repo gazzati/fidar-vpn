@@ -1,7 +1,7 @@
 export enum PayTariff {
-  Month = 139,
-  Month3 = 399,
-  Year = 1499
+  Month = 160,
+  Month3 = 450,
+  Year = 1800
 }
 
 export enum TariffName {
