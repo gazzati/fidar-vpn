@@ -51,6 +51,11 @@ class PaymentService {
     }
 
     const months = getTariffMonths(tariff / 100)
+    if(!Number.isInteger(months)) {
+      error(`Error month calculating for tariff: ${tariff}`, chat)
+      return this.messages.sendServerError(chat)
+    }
+
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
 
