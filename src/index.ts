@@ -205,7 +205,7 @@ class Telegram {
       chatId,
       Buffer.from(conf, "base64"),
       {},
-      { filename: `fidar-${userName}-${serverName}.conf` }
+      { filename: `fidar${serverName}.conf` }
     )
     await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fidar-${userName}-${serverName}` })
   }
