@@ -52,7 +52,7 @@ jobs:
           username: ${{ secrets.SSH_USER || secrets.USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY || secrets.PRIVATE_KEY }}
           script: |
-            cd /home/pm2/fidar-vpn
+            cd /home/tim/fidar-vpn
             if [ ! -f .env ]; then
               echo "Missing required file: .env"
               exit 1
