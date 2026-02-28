@@ -1,0 +1,16 @@
+services:
+  fidar-bot:
+    image: gazzati/fidar-vpn:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    command: ["node", "build/index.js"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  fidar-worker:
+    image: gazzati/fidar-vpn:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    command: ["node", "build/workers/index.js"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
