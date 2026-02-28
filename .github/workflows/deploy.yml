@@ -48,9 +48,9 @@ jobs:
       - name: Deploy to server
         uses: appleboy/ssh-action@v1
         with:
-          host: ${{ secrets.SSH_HOST || secrets.HOST }}
-          username: ${{ secrets.SSH_USER || secrets.USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY || secrets.PRIVATE_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/tim/fidar-vpn
             if [ ! -f .env ]; then
