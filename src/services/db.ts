@@ -61,6 +61,33 @@ class DbService {
     return result.affected === 1
   }
 
+  public async savePayment(data: {
+    clientId: number
+    amount: number
+    currency: string
+    months: number
+    paidUntil: string
+    invoicePayload?: string
+    telegramPaymentChargeId: string
+    providerPaymentChargeId?: string
+  }): Promise<boolean> {
+    await entities.Payment.upsert(
+      {
+        client: { id: data.clientId },
+        amount: data.amount,
+        currency: data.currency,
+        months: data.months,
+        paid_until: data.paidUntil,
+        ...(data.invoicePayload && { invoice_payload: data.invoicePayload }),
+        telegram_payment_charge_id: data.telegramPaymentChargeId,
+        ...(data.providerPaymentChargeId && { provider_payment_charge_id: data.providerPaymentChargeId })
+      },
+      { conflictPaths: ["telegram_payment_charge_id"], skipUpdateIfNoValuesChanged: true }
+    )
+
+    return true
+  }
+
   public async getServer(name: string): Promise<Server | null> {
     return await entities.Server.findOne({ where: { name, active: true } })
   }

@@ -38,8 +38,9 @@ class PaymentService {
       return this.messages.sendServerError(chat)
     }
 
-    const tariff = message.successful_payment?.total_amount
-    if (!tariff) {
+    const successfulPayment = message.successful_payment
+    const tariff = successfulPayment?.total_amount
+    if (!successfulPayment || !tariff) {
       tgLogger.error(from, "[tariff] is required")
       return this.messages.sendServerError(chat)
     }
@@ -58,6 +59,21 @@ class PaymentService {
 
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
+
+    const paymentSaved = await this.db.savePayment({
+      clientId: client.id,
+      amount: tariff,
+      currency: successfulPayment.currency,
+      months,
+      paidUntil: dbDate(newExpiredAt),
+      invoicePayload: successfulPayment.invoice_payload,
+      telegramPaymentChargeId: successfulPayment.telegram_payment_charge_id,
+      providerPaymentChargeId: successfulPayment.provider_payment_charge_id
+    })
+    if (!paymentSaved) {
+      error("Payment saving error", chat)
+      return this.messages.sendServerError(chat)
+    }
 
     const success = await this.renewSubscription(client, dbDate(newExpiredAt))
     if (!success) {
