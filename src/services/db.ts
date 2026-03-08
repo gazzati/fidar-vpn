@@ -51,7 +51,8 @@ class DbService {
       {
         expired_at: expiredAt,
         trial_used: true,
-        active: true
+        active: true,
+        was_reminded: false
       }
     )
   }

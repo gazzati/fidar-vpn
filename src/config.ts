@@ -20,7 +20,7 @@ const envVarsSchema = Joi.object({
 })
 
 const { error, value: envVars } = envVarsSchema.validate(process.env)
-if (error) new Error(`Config validation error: ${error.message}`)
+if (error) throw new Error(`Config validation error: ${error.message}`)
 
 const callbackData = {
   start: "start",

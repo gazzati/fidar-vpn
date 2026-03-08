@@ -228,7 +228,7 @@ class Telegram {
     const success = await this.payment.renewSubscription(client, dbDate(newExpiredAt))
     if (!success) return this.error(from, chat, "Subscription renew error")
 
-    this.waitingPromoIds = this.waitingPromoIds.filter(id => id !== from.id)
+    this.waitingPromoIds = this.waitingPromoIds.filter(id => id !== chat.id)
 
     this.messages.sendSuccessfulPromo(chat, paidUntil)
     tgLogger.log(from, `🏷️ Successful promo use [${promo.value}]`)
