@@ -2,6 +2,7 @@ import TelegramBot from "node-telegram-bot-api"
 
 import config from "@root/config"
 import { tgLogger } from "@root/helpers/logger"
+import { buildCallbackData, CallbackAction } from "@root/telegram/callback-data"
 
 import { Server } from "@database/entities/Server"
 
@@ -26,7 +27,7 @@ class MessageService {
   public sendLocations(chat: Chat, servers: Array<Server>) {
     const data = servers.map(server => ({
       text: server.label,
-      callback_data: `${config.callbackData.changeServer}:${server.name}`
+      callback_data: buildCallbackData(CallbackAction.ChangeServer, server.name)
     }))
     this.sendMessage(chat, config.phrases.CHANGE_SERVER_MESSAGE, [data, config.inlineKeyboardItem.subscription])
   }

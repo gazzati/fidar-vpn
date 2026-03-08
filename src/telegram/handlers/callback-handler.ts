@@ -4,7 +4,7 @@ import { tgLogger } from "@helpers/logger"
 import DbService from "@services/db"
 import MessageService from "@services/messages"
 import PaymentService from "@services/payment"
-import config from "@root/config"
+import { CallbackAction, parseCallbackData } from "@root/telegram/callback-data"
 
 import { PayTariff } from "@interfaces/pay"
 
@@ -25,43 +25,41 @@ class CallbackHandler {
     tgLogger.log(from, `🤙 Callback-query ${data}`)
 
     const { chat } = message
+    const parsedData = parseCallbackData(data)
+    if (!parsedData) return this.messages.sendStart(from, chat)
 
-    switch (data) {
-      case config.callbackData.start:
+    switch (parsedData.action) {
+      case CallbackAction.Start:
         return this.start(from, chat, message.message_id)
-      case config.callbackData.trial:
+      case CallbackAction.Trial:
         return this.trial(from, chat, message.message_id)
-      case config.callbackData.locations:
+      case CallbackAction.Locations:
         return this.locations(from, chat, message.message_id)
-      case config.callbackData.files:
+      case CallbackAction.Files:
         return this.files(from, chat, message.message_id)
-      case config.callbackData.subscription:
+      case CallbackAction.Subscription:
         return this.subscription(from, chat, message.message_id)
-      case config.callbackData.support:
+      case CallbackAction.Support:
         return this.messages.sendHelp(chat)
-      case config.callbackData.manual:
+      case CallbackAction.Manual:
         return this.messages.sendManual(chat)
-      case config.callbackData.pay:
+      case CallbackAction.Pay:
         return this.messages.sendPay(from, chat)
-      case config.callbackData.promo:
+      case CallbackAction.Promo:
         return this.messages.sendPromo(chat)
+      case CallbackAction.ChangeServer: {
+        const serverName = parsedData.param
+        if (!serverName) return this.error(from, chat, "serverName is required")
+
+        return this.changeServer(from, chat, serverName, message.message_id)
+      }
+      case CallbackAction.Tariff: {
+        const tariff = parsedData.param as PayTariff | undefined
+        if (!tariff) return tgLogger.error(from, "Tariff not found")
+
+        return this.payment.invoice(from, chat, Number(tariff))
+      }
     }
-
-    if (data.includes(config.callbackData.changeServer)) {
-      const [, serverName] = data.split(":")
-      if (!serverName) return this.error(from, chat, "serverName is required")
-
-      return this.changeServer(from, chat, serverName, message.message_id)
-    }
-
-    if (data.includes(config.callbackData.tariff)) {
-      const [, tariff] = data.split(":") as [string, PayTariff]
-      if (!tariff) return tgLogger.error(from, "Tariff not found")
-
-      return this.payment.invoice(from, chat, Number(tariff))
-    }
-
-    return this.messages.sendStart(from, chat)
   }
 
   public async subscription(from: User, chat: Chat, messageId?: number) {

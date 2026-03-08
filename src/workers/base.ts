@@ -4,6 +4,7 @@ import Logger from "@helpers/logger"
 abstract class Base {
   protected logger: Logger
   private pauseMs: number
+  private running = true
 
   protected entities = entities
 
@@ -13,29 +14,49 @@ abstract class Base {
   }
 
   async main() {
-    if (!this.pauseMs) return process.exit()
+    if (!this.pauseMs) return
 
     await this.sleep(500) // for db connect
 
     this.logger.log("Started")
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    const stop = () => {
+      if (!this.running) return
+      this.running = false
+      this.logger.log("Stopping...")
+    }
+
+    process.on("SIGINT", stop)
+    process.on("SIGTERM", stop)
+
+    while (this.running) {
       try {
         await this.loop()
       } catch (error) {
         this.logger.error(error)
       }
 
-      await this.sleep()
+      await this.sleep(this.pauseMs)
     }
+
+    process.off("SIGINT", stop)
+    process.off("SIGTERM", stop)
+
+    this.logger.log("Stopped")
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   public async loop() {}
 
-  async sleep(pause = this.pauseMs) {
-    await new Promise(resolve => setTimeout(resolve, pause))
+  protected async sleep(pause = this.pauseMs) {
+    const stepMs = 1_000
+    let elapsed = 0
+
+    while (this.running && elapsed < pause) {
+      const timeout = Math.min(stepMs, pause - elapsed)
+      await new Promise(resolve => setTimeout(resolve, timeout))
+      elapsed += timeout
+    }
   }
 }
 

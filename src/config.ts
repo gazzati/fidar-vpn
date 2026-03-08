@@ -2,6 +2,7 @@ import dotenv from "dotenv"
 import Joi from "joi"
 
 import { PayTariff, TariffName } from "@interfaces/pay"
+import { buildCallbackData, CallbackAction } from "@root/telegram/callback-data"
 
 dotenv.config()
 
@@ -23,17 +24,17 @@ const { error, value: envVars } = envVarsSchema.validate(process.env)
 if (error) throw new Error(`Config validation error: ${error.message}`)
 
 const callbackData = {
-  start: "start",
-  changeServer: "change-server",
-  manual: "manual",
-  files: "files",
-  locations: "locations",
-  subscription: "subscription",
-  pay: "pay",
-  tariff: "tariff",
-  support: "support",
-  promo: "promo",
-  trial: "trial"
+  start: CallbackAction.Start,
+  changeServer: CallbackAction.ChangeServer,
+  manual: CallbackAction.Manual,
+  files: CallbackAction.Files,
+  locations: CallbackAction.Locations,
+  subscription: CallbackAction.Subscription,
+  pay: CallbackAction.Pay,
+  tariff: CallbackAction.Tariff,
+  support: CallbackAction.Support,
+  promo: CallbackAction.Promo,
+  trial: CallbackAction.Trial
 }
 
 export default {
@@ -111,16 +112,21 @@ export default {
       [
         {
           text: `${PayTariff.Month}₽ - ${TariffName.Month}`,
-          callback_data: `${callbackData.tariff}:${PayTariff.Month}`
+          callback_data: buildCallbackData(CallbackAction.Tariff, PayTariff.Month)
         }
       ],
       [
         {
           text: `${PayTariff.Month3}₽ - ${TariffName.Month3}`,
-          callback_data: `${callbackData.tariff}:${PayTariff.Month3}`
+          callback_data: buildCallbackData(CallbackAction.Tariff, PayTariff.Month3)
         }
       ],
-      [{ text: `${PayTariff.Year}₽ - ${TariffName.Year}`, callback_data: `${callbackData.tariff}:${PayTariff.Year}` }],
+      [
+        {
+          text: `${PayTariff.Year}₽ - ${TariffName.Year}`,
+          callback_data: buildCallbackData(CallbackAction.Tariff, PayTariff.Year)
+        }
+      ],
       [{ text: "🏷️ Ввести промокод", callback_data: callbackData.promo }]
     ]
   }
