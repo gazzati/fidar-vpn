@@ -3,7 +3,7 @@ import TelegramBot from "node-telegram-bot-api"
 import config from "@root/config"
 import { tgLogger } from "@root/helpers/logger"
 import { buildCallbackData, CallbackAction } from "@root/telegram/callback-data"
-import { PayMethod, PayTariff, TariffName } from "@interfaces/pay"
+import { CardTariff, PayMethod, StarsTariff, TariffName } from "@interfaces/pay"
 
 import { Server } from "@database/entities/Server"
 
@@ -53,11 +53,12 @@ class MessageService {
     const tariffAction = isCard ? CallbackAction.TariffCard : CallbackAction.TariffStars
     const currencySymbol = isCard ? "₽" : "⭐"
     const message = isCard ? config.phrases.PAY_CARD_MESSAGE : config.phrases.PAY_STARS_MESSAGE
+    const tariffs = isCard ? CardTariff : StarsTariff
 
     this.sendMessage(chat, message, [
-      [{ text: `${PayTariff.Month}${currencySymbol} - ${TariffName.Month}`, callback_data: buildCallbackData(tariffAction, PayTariff.Month) }],
-      [{ text: `${PayTariff.Month3}${currencySymbol} - ${TariffName.Month3}`, callback_data: buildCallbackData(tariffAction, PayTariff.Month3) }],
-      [{ text: `${PayTariff.Year}${currencySymbol} - ${TariffName.Year}`, callback_data: buildCallbackData(tariffAction, PayTariff.Year) }],
+      [{ text: `${tariffs.Month}${currencySymbol} - ${TariffName.Month}`, callback_data: buildCallbackData(tariffAction, tariffs.Month) }],
+      [{ text: `${tariffs.Month3}${currencySymbol} - ${TariffName.Month3}`, callback_data: buildCallbackData(tariffAction, tariffs.Month3) }],
+      [{ text: `${tariffs.Year}${currencySymbol} - ${TariffName.Year}`, callback_data: buildCallbackData(tariffAction, tariffs.Year) }],
       config.inlineKeyboardItem.promo,
       config.inlineKeyboardItem.pay
     ])

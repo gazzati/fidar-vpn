@@ -1,7 +1,7 @@
 import dotenv from "dotenv"
 import Joi from "joi"
 
-import { PayTariff, TariffName } from "@interfaces/pay"
+import { CardTariff, TariffName } from "@interfaces/pay"
 import { buildCallbackData, CallbackAction } from "@root/telegram/callback-data"
 
 dotenv.config()
@@ -16,8 +16,7 @@ const envVarsSchema = Joi.object({
   PSQL_USER: Joi.string().default("root").description("Database User"),
   PSQL_PASSWORD: Joi.string().allow("").default("root").description("Database Password"),
 
-  PROVIDER_TOKEN: Joi.string().allow("").default("").description("Provider token"),
-  CURRENCY: Joi.string().allow("").default("RUB").description("Currency")
+  PROVIDER_TOKEN: Joi.string().allow("").default("").description("Provider token")
 })
 
 const { error, value: envVars } = envVarsSchema.validate(process.env, { allowUnknown: true })
@@ -52,7 +51,6 @@ export default {
   psqlPassword: envVars.PSQL_PASSWORD,
 
   providerToken: envVars.PROVIDER_TOKEN,
-  currency: envVars.CURRENCY,
 
   serversPort: 3003,
 
@@ -120,20 +118,20 @@ export default {
     tariffs: [
       [
         {
-          text: `${PayTariff.Month}₽ - ${TariffName.Month}`,
-          callback_data: buildCallbackData(CallbackAction.TariffCard, PayTariff.Month)
+          text: `${CardTariff.Month}₽ - ${TariffName.Month}`,
+          callback_data: buildCallbackData(CallbackAction.TariffCard, CardTariff.Month)
         }
       ],
       [
         {
-          text: `${PayTariff.Month3}₽ - ${TariffName.Month3}`,
-          callback_data: buildCallbackData(CallbackAction.TariffCard, PayTariff.Month3)
+          text: `${CardTariff.Month3}₽ - ${TariffName.Month3}`,
+          callback_data: buildCallbackData(CallbackAction.TariffCard, CardTariff.Month3)
         }
       ],
       [
         {
-          text: `${PayTariff.Year}₽ - ${TariffName.Year}`,
-          callback_data: buildCallbackData(CallbackAction.TariffCard, PayTariff.Year)
+          text: `${CardTariff.Year}₽ - ${TariffName.Year}`,
+          callback_data: buildCallbackData(CallbackAction.TariffCard, CardTariff.Year)
         }
       ],
       [{ text: "🏷️ Ввести промокод", callback_data: callbackData.promo }]

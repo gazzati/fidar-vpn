@@ -1,7 +1,13 @@
-export enum PayTariff {
+export enum CardTariff {
   Month = 160,
   Month3 = 450,
   Year = 1800
+}
+
+export enum StarsTariff {
+  Month = 1,
+  Month3 = 250,
+  Year = 1000
 }
 
 export enum TariffName {
@@ -15,4 +21,7 @@ export enum PayMethod {
   Stars = "stars"
 }
 
-export const TELEGRAM_STARS_CURRENCY = "XTR"
+export enum PaymentCurrency {
+  Rub = "RUB",
+  Stars = "XTR"
+}

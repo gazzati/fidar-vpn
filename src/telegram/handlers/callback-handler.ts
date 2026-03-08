@@ -6,7 +6,7 @@ import MessageService from "@services/messages"
 import PaymentService from "@services/payment"
 import { CallbackAction, parseCallbackData } from "@root/telegram/callback-data"
 
-import { PayMethod, PayTariff } from "@interfaces/pay"
+import { CardTariff, PayMethod, StarsTariff } from "@interfaces/pay"
 
 import TelegramBot, { type User, type Chat, type CallbackQuery } from "node-telegram-bot-api"
 
@@ -58,22 +58,22 @@ class CallbackHandler {
         return this.changeServer(from, chat, serverName, message.message_id)
       }
       case CallbackAction.Tariff: {
-        const tariff = parsedData.param as PayTariff | undefined
-        if (!tariff) return tgLogger.error(from, "Tariff not found")
+        const tariff = Number(parsedData.param)
+        if (Number.isNaN(tariff)) return tgLogger.error(from, "Tariff not found")
 
-        return this.payment.invoice(from, chat, Number(tariff))
+        return this.payment.invoice(from, chat, tariff)
       }
       case CallbackAction.TariffCard: {
-        const tariff = parsedData.param as PayTariff | undefined
-        if (!tariff) return tgLogger.error(from, "Tariff not found")
+        const tariff = Number(parsedData.param)
+        if (Number.isNaN(tariff) || !Object.values(CardTariff).includes(tariff)) return tgLogger.error(from, "Tariff not found")
 
-        return this.payment.invoice(from, chat, Number(tariff), PayMethod.Card)
+        return this.payment.invoice(from, chat, tariff, PayMethod.Card)
       }
       case CallbackAction.TariffStars: {
-        const tariff = parsedData.param as PayTariff | undefined
-        if (!tariff) return tgLogger.error(from, "Tariff not found")
+        const tariff = Number(parsedData.param)
+        if (Number.isNaN(tariff) || !Object.values(StarsTariff).includes(tariff)) return tgLogger.error(from, "Tariff not found")
 
-        return this.payment.invoice(from, chat, Number(tariff), PayMethod.Stars)
+        return this.payment.invoice(from, chat, tariff, PayMethod.Stars)
       }
     }
   }

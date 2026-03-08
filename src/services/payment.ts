@@ -6,9 +6,9 @@ import config from "@root/config"
 import { Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import { tgLogger, error } from "@helpers/logger"
-import { getTariffName, getTariffMonths, getInvoiceAmount, getPaidAmount } from "@helpers/tariff"
+import { getTariffName, getTariffMonths, getInvoiceAmount, getPaidAmount, getPayMethodByCurrency } from "@helpers/tariff"
 
-import { PayMethod, PayTariff, TELEGRAM_STARS_CURRENCY } from "@interfaces/pay"
+import { PayMethod, PaymentCurrency } from "@interfaces/pay"
 
 import DbService from "./db"
 import MessageService from "./messages"
@@ -45,6 +45,7 @@ class PaymentService {
       return this.messages.sendServerError(chat)
     }
     const paidAmount = getPaidAmount(tariff, successfulPayment.currency)
+    const method = getPayMethodByCurrency(successfulPayment.currency)
 
     const client = await this.db.getClientWithServer(from)
     if (!client?.server) {
@@ -52,8 +53,8 @@ class PaymentService {
       return this.messages.sendServerError(chat)
     }
 
-    const months = getTariffMonths(paidAmount)
-    if(!Number.isInteger(months)) {
+    const months = getTariffMonths(method, paidAmount)
+    if (months === undefined) {
       error(`Error month calculating for tariff: ${paidAmount}`, chat)
       return this.messages.sendServerError(chat)
     }
@@ -86,20 +87,24 @@ class PaymentService {
     tgLogger.log(from, `🔥 Successful payment amount: [${paidAmount} ${successfulPayment.currency}]`)
   }
 
-  public async invoice(from: User, chat: Chat, tariff: PayTariff, method: PayMethod = PayMethod.Card) {
+  public async invoice(from: User, chat: Chat, tariff: number, method: PayMethod = PayMethod.Card) {
     const client = await this.db.getClient(from)
     if (!client) {
       error("Client not found", chat)
       return this.messages.sendServerError(chat)
     }
 
-    const tariffName = getTariffName(tariff)
-    const months = getTariffMonths(tariff)
+    const tariffName = getTariffName(method, tariff)
+    const months = getTariffMonths(method, tariff)
+    if (!tariffName || !months) {
+      error(`Tariff not found for method [${method}] and price [${tariff}]`, chat)
+      return this.messages.sendServerError(chat)
+    }
 
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
     const starsPayment = method === PayMethod.Stars
-    const currency = starsPayment ? TELEGRAM_STARS_CURRENCY : config.currency
+    const currency = starsPayment ? PaymentCurrency.Stars : PaymentCurrency.Rub
     if (!starsPayment && !config.providerToken) {
       error("Provider token is required for non-stars payments", chat)
       return this.messages.sendServerError(chat)
