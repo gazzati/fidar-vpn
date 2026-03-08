@@ -62,5 +62,13 @@ jobs:
               exit 1
             fi
             echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}" > .env.deploy
+            mkdir -p logs/archive
+            TS=$(date +%F_%H-%M-%S)
+            for SVC in fidar-bot fidar-worker; do
+              CID=$(docker compose --env-file .env --env-file .env.deploy ps -q "$SVC")
+              if [ -n "$CID" ]; then
+                docker logs --timestamps "$CID" > "logs/archive/${SVC}_${TS}.log" 2>&1 || true
+              fi
+            done
             docker compose --env-file .env --env-file .env.deploy pull fidar-bot fidar-worker
             docker compose --env-file .env --env-file .env.deploy up -d fidar-bot fidar-worker

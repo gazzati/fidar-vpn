@@ -1,43 +1,67 @@
 # Deploy with Docker Compose
 
 ## What Changed
-- Deploy больше не делает `git pull` на VPS.
-- GitHub Actions собирает Docker image и пушит immutable-теги (`sha-<commit>`).
-- Текущий tag деплоя хранится на сервере в `.env.deploy`.
-- Приложение запускается двумя процессами: `fidar-bot` и `fidar-worker`.
+- Deploy does not run `git pull` on VPS.
+- GitHub Actions builds and pushes immutable image tags (`sha-<commit>`).
+- Current deploy tag is stored in `.env.deploy` on VPS.
+- App runs in two services: `fidar-bot` and `fidar-worker`.
+- Before service restart, current container logs are archived on server.
 
 ## Deploy Flow
-1. GitHub Actions собирает Docker image.
-2. Образ пушится с тегами:
+1. GitHub Actions builds Docker image.
+2. Image is pushed with tags:
    - `gazzati/fidar-vpn:sha-<commit>`
    - `gazzati/fidar-vpn:latest`
-3. Deploy job подключается к VPS и пишет `.env.deploy`:
+3. Deploy job connects to VPS and writes `.env.deploy`:
    - `IMAGE_TAG=sha-<commit>`
-4. `docker compose` делает pull и перезапускает `fidar-bot` и `fidar-worker`.
+4. Deploy archives current logs to `logs/archive/*`.
+5. `docker compose` pulls image and recreates `fidar-bot` + `fidar-worker`.
 
 ## Required VPS Layout
-Используй отдельную директорию проекта на VPS без `git clone` приложения.
+Use a dedicated runtime directory on VPS (without app source `git clone`).
 
-Пример:
-- `/home/pm2/fidar-vpn/docker-compose.yml`
-- `/home/pm2/fidar-vpn/.env` (runtime env vars)
-- `/home/pm2/fidar-vpn/.env.deploy` (создается деплоем автоматически)
+Example:
+- `/home/tim/fidar-vpn/docker-compose.yml`
+- `/home/tim/fidar-vpn/.env` (runtime env vars)
+- `/home/tim/fidar-vpn/.env.deploy` (created by deploy)
+- `/home/tim/fidar-vpn/logs/archive` (archived logs before restart)
 
-Перед первым деплоем положи на VPS:
+Before first deploy, place on VPS:
 - `docker-compose.yml`
 - `.env`
 
-Workflow завершится ошибкой, если `.env` или `docker-compose.yml` отсутствуют.
+Workflow fails if `.env` or `docker-compose.yml` is missing.
 
 ## Required GitHub Secrets
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
-- `SSH_HOST` (или legacy `HOST`)
-- `SSH_USER` (или legacy `USERNAME`)
-- `SSH_PRIVATE_KEY` (или legacy `PRIVATE_KEY`)
+- `SSH_HOST` (or legacy `HOST`)
+- `SSH_USER` (or legacy `USERNAME`)
+- `SSH_PRIVATE_KEY` (or legacy `PRIVATE_KEY`)
+
+## Read Logs
+Current running containers:
+```bash
+cd /home/tim/fidar-vpn
+docker compose logs -f fidar-bot fidar-worker
+```
+
+Archived logs from previous containers:
+```bash
+cd /home/tim/fidar-vpn
+ls -lah logs/archive
+tail -n 200 logs/archive/fidar-bot_<timestamp>.log
+tail -n 200 logs/archive/fidar-worker_<timestamp>.log
+```
+
+Search in archived logs:
+```bash
+cd /home/tim/fidar-vpn
+rg -n "error|exception|failed" logs/archive
+```
 
 ## Rollback
-В директории проекта на VPS:
+In VPS project directory:
 
 ```bash
 echo "IMAGE_TAG=sha-<old-commit>" > .env.deploy
