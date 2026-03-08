@@ -44,6 +44,7 @@ class PaymentService {
       tgLogger.error(from, "[tariff] is required")
       return this.messages.sendServerError(chat)
     }
+    const tariffInRub = tariff / 100
 
     const client = await this.db.getClientWithServer(from)
     if (!client?.server) {
@@ -51,7 +52,7 @@ class PaymentService {
       return this.messages.sendServerError(chat)
     }
 
-    const months = getTariffMonths(tariff / 100)
+    const months = getTariffMonths(tariffInRub)
     if(!Number.isInteger(months)) {
       error(`Error month calculating for tariff: ${tariff}`, chat)
       return this.messages.sendServerError(chat)
@@ -62,7 +63,7 @@ class PaymentService {
 
     const paymentSaved = await this.db.savePayment({
       clientId: client.id,
-      amount: tariff,
+      amount: tariffInRub,
       currency: successfulPayment.currency,
       months,
       paidUntil: dbDate(newExpiredAt),
@@ -82,7 +83,7 @@ class PaymentService {
     }
 
     this.messages.sendSuccessfulPayment(chat, paidUntil)
-    tgLogger.log(from, `🔥 Successful payment amount: [${tariff / 100}]`)
+    tgLogger.log(from, `🔥 Successful payment amount: [${tariffInRub}]`)
   }
 
   public async invoice(from: User, chat: Chat, tariff: PayTariff) {
