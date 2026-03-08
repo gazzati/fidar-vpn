@@ -8,16 +8,12 @@ import { AppDataSource, entities } from "@database/data-source"
 enum SystemTelegramCommand {
   Help = "/help",
   Status = "/status",
-  Health = "/health",
-  Stats = "/stats",
   Servers = "/servers"
 }
 
 const SYSTEM_COMMANDS: Array<string> = [
   SystemTelegramCommand.Help,
   SystemTelegramCommand.Status,
-  SystemTelegramCommand.Health,
-  SystemTelegramCommand.Stats,
   SystemTelegramCommand.Servers
 ]
 
@@ -29,8 +25,6 @@ class SystemCommandHandler {
       .setMyCommands([
         { command: "help", description: "Показать список системных команд" },
         { command: "status", description: "Краткий статус приложения" },
-        { command: "health", description: "Проверить подключение к БД" },
-        { command: "stats", description: "Показать статистику по БД" },
         { command: "servers", description: "Проверить доступность VPN серверов" }
       ])
       .catch(() => null)
@@ -56,12 +50,6 @@ class SystemCommandHandler {
       case SystemTelegramCommand.Help:
         await this.safeSend(chat.id, this.getHelpMessage())
         return
-      case SystemTelegramCommand.Health:
-        await this.safeSend(chat.id, await this.getHealthMessage())
-        return
-      case SystemTelegramCommand.Stats:
-        await this.safeSend(chat.id, await this.getStatsMessage())
-        return
       case SystemTelegramCommand.Servers:
         await this.safeSend(chat.id, await this.getServersMessage())
         return
@@ -77,8 +65,6 @@ class SystemCommandHandler {
     return [
       "Системные команды:",
       "/status - общий статус приложения",
-      "/health - состояние подключений",
-      "/stats - статистика из БД",
       "/servers - доступность VPN серверов",
       "/help - список команд"
     ].join("\n")
@@ -89,7 +75,6 @@ class SystemCommandHandler {
 
     return [
       "📊 Статус приложения",
-      `🕒 now: ${new Date().toISOString()}`,
       `⏱ uptime: ${this.formatDuration(process.uptime())}`,
       "",
       health,
@@ -120,22 +105,18 @@ class SystemCommandHandler {
     const nextDay = new Date(now)
     nextDay.setDate(nextDay.getDate() + 1)
 
-    const [totalClients, activeClients, inactiveClients, expiringClients, remindedClients, totalServers, activeServers] =
-      await Promise.all([
-        entities.Client.count(),
-        entities.Client.countBy({ active: true }),
-        entities.Client.countBy({ active: false }),
-        entities.Client.countBy({ active: true, expired_at: Between(now, nextDay) }),
-        entities.Client.countBy({ was_reminded: true }),
-        entities.Server.count(),
-        entities.Server.countBy({ active: true })
-      ])
+    const [totalClients, activeClients, expiringClients, totalServers, activeServers] = await Promise.all([
+      entities.Client.count(),
+      entities.Client.countBy({ active: true }),
+      entities.Client.countBy({ active: true, expired_at: Between(now, nextDay) }),
+      entities.Server.count(),
+      entities.Server.countBy({ active: true })
+    ])
 
     return [
       "📦 Stats",
-      `👥 clients: total=${totalClients}, active=${activeClients}, inactive=${inactiveClients}`,
+      `👥 clients: total=${totalClients}, active=${activeClients}`,
       `⏳ expiring_24h: ${expiringClients}`,
-      `🔔 reminded: ${remindedClients}`,
       `🌍 servers: total=${totalServers}, active=${activeServers}`
     ].join("\n")
   }
