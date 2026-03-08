@@ -31,7 +31,11 @@ const callbackData = {
   locations: CallbackAction.Locations,
   subscription: CallbackAction.Subscription,
   pay: CallbackAction.Pay,
+  payCard: CallbackAction.PayCard,
+  payStars: CallbackAction.PayStars,
   tariff: CallbackAction.Tariff,
+  tariffCard: CallbackAction.TariffCard,
+  tariffStars: CallbackAction.TariffStars,
   support: CallbackAction.Support,
   promo: CallbackAction.Promo,
   trial: CallbackAction.Trial
@@ -54,15 +58,17 @@ export default {
 
   phrases: {
     START_MESSAGE:
-      "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой",
+      "*Добро пожаловать в Fídar VPN* \n\n🚀 Высокоскоростной анонимный VPN с безлимитным трафиком \n\n🌎 Локации: 🇸🇪 🇪🇪 🇷🇺 \n\n💵 Оплата картой или Telegram Stars",
     CHANGE_SERVER_MESSAGE:
       "*Выберите расположение сервера:* \n\n💡 Локацию можно будет сменить в меню подписки\n\n⚠️ Обратите внимание, после изменения локации предыдущий файл подключения свою работу прекращает",
     HELP_MESSAGE: "По всем вопросам пиши @gazzati",
     ERROR_MESSAGE: "🤷‍♂️ Что то пошло не так, попробуйте повторить позже",
     DONE_MESSAGE: "✅ Готово, отсканируй QR код или используй файл с конфигурацией",
     SUBSCRIPTION_NOT_FOUND_MESSAGE: "🙅 У вас нет подписки",
-    PAY_MESSAGE:
-      "💵 Выберите сумму для пополнения: \n\nОплата возможна Банковской картой. Если у вас есть промокод - нажмите кнопку ниже",
+    PAY_MESSAGE: "💵 Выберите способ оплаты",
+    PAY_CARD_MESSAGE:
+      "💳 Выберите сумму для пополнения: \n\nОплата банковской картой. Если у вас есть промокод - нажмите кнопку ниже",
+    PAY_STARS_MESSAGE: "⭐ Выберите сумму для пополнения в Telegram Stars",
     PAY_NEW_USER_MESSAGE: "🫶 Мы ценим наших клиентов и поэтому рекомендуем сначала воспользоваться бесплатным периодом",
     NEED_PAY_MESSAGE: "💵 Необходимо произвести оплату",
     SUCCESSFUL_PAYMENT_MESSAGE: "👍 Оплата прошла успешно",
@@ -89,6 +95,9 @@ export default {
     main: [{ text: "🔙 Вернуться на главную", callback_data: callbackData.start }],
     trial: [{ text: "🎁 Пробная подписка", callback_data: callbackData.trial }],
     pay: [{ text: "💵 Оплатить", callback_data: callbackData.pay }],
+    payCard: [{ text: "💳 Банковская карта", callback_data: callbackData.payCard }],
+    payStars: [{ text: "⭐ Telegram Stars", callback_data: callbackData.payStars }],
+    promo: [{ text: "🏷️ Ввести промокод", callback_data: callbackData.promo }],
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],
     files: [{ text: "💾 Скачать данные для подключения", callback_data: callbackData.files }],
     locations: [{ text: "📍 Выбрать локацию", callback_data: callbackData.locations }],
@@ -112,19 +121,19 @@ export default {
       [
         {
           text: `${PayTariff.Month}₽ - ${TariffName.Month}`,
-          callback_data: buildCallbackData(CallbackAction.Tariff, PayTariff.Month)
+          callback_data: buildCallbackData(CallbackAction.TariffCard, PayTariff.Month)
         }
       ],
       [
         {
           text: `${PayTariff.Month3}₽ - ${TariffName.Month3}`,
-          callback_data: buildCallbackData(CallbackAction.Tariff, PayTariff.Month3)
+          callback_data: buildCallbackData(CallbackAction.TariffCard, PayTariff.Month3)
         }
       ],
       [
         {
           text: `${PayTariff.Year}₽ - ${TariffName.Year}`,
-          callback_data: buildCallbackData(CallbackAction.Tariff, PayTariff.Year)
+          callback_data: buildCallbackData(CallbackAction.TariffCard, PayTariff.Year)
         }
       ],
       [{ text: "🏷️ Ввести промокод", callback_data: callbackData.promo }]

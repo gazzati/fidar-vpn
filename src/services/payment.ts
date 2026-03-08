@@ -6,9 +6,9 @@ import config from "@root/config"
 import { Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import { tgLogger, error } from "@helpers/logger"
-import { getTariffName, getTariffMonths } from "@helpers/tariff"
+import { getTariffName, getTariffMonths, getInvoiceAmount, getPaidAmount } from "@helpers/tariff"
 
-import { PayTariff } from "@interfaces/pay"
+import { PayMethod, PayTariff, TELEGRAM_STARS_CURRENCY } from "@interfaces/pay"
 
 import DbService from "./db"
 import MessageService from "./messages"
@@ -44,7 +44,7 @@ class PaymentService {
       tgLogger.error(from, "[tariff] is required")
       return this.messages.sendServerError(chat)
     }
-    const tariffInRub = tariff / 100
+    const paidAmount = getPaidAmount(tariff, successfulPayment.currency)
 
     const client = await this.db.getClientWithServer(from)
     if (!client?.server) {
@@ -52,9 +52,9 @@ class PaymentService {
       return this.messages.sendServerError(chat)
     }
 
-    const months = getTariffMonths(tariffInRub)
+    const months = getTariffMonths(paidAmount)
     if(!Number.isInteger(months)) {
-      error(`Error month calculating for tariff: ${tariff}`, chat)
+      error(`Error month calculating for tariff: ${paidAmount}`, chat)
       return this.messages.sendServerError(chat)
     }
 
@@ -63,7 +63,7 @@ class PaymentService {
 
     const paymentSaved = await this.db.savePayment({
       clientId: client.id,
-      amount: tariffInRub,
+      amount: paidAmount,
       currency: successfulPayment.currency,
       months,
       paidUntil: dbDate(newExpiredAt),
@@ -83,10 +83,10 @@ class PaymentService {
     }
 
     this.messages.sendSuccessfulPayment(chat, paidUntil)
-    tgLogger.log(from, `🔥 Successful payment amount: [${tariffInRub}]`)
+    tgLogger.log(from, `🔥 Successful payment amount: [${paidAmount} ${successfulPayment.currency}]`)
   }
 
-  public async invoice(from: User, chat: Chat, tariff: PayTariff) {
+  public async invoice(from: User, chat: Chat, tariff: PayTariff, method: PayMethod = PayMethod.Card) {
     const client = await this.db.getClient(from)
     if (!client) {
       error("Client not found", chat)
@@ -98,15 +98,21 @@ class PaymentService {
 
     const newExpiredAt = getNewExpiredAt(client.expired_at, months)
     const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
+    const starsPayment = method === PayMethod.Stars
+    const currency = starsPayment ? TELEGRAM_STARS_CURRENCY : config.currency
+    if (!starsPayment && !config.providerToken) {
+      error("Provider token is required for non-stars payments", chat)
+      return this.messages.sendServerError(chat)
+    }
 
     await this.bot.sendInvoice(
       chat.id,
       "Оплата подписки\n\n",
       `\n\nПродление на ${tariffName}. Ваша подписка будет продлена до ${paidUntil}`,
       tariffName,
-      config.providerToken,
-      config.currency,
-      [{ label: tariffName, amount: tariff * 100 }]
+      starsPayment ? "" : config.providerToken,
+      currency,
+      [{ label: tariffName, amount: getInvoiceAmount(tariff, currency) }]
     )
   }
 

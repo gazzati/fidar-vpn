@@ -6,7 +6,11 @@ export enum CallbackAction {
   Locations = "locations",
   Subscription = "subscription",
   Pay = "pay",
+  PayCard = "pay-card",
+  PayStars = "pay-stars",
   Tariff = "tariff",
+  TariffCard = "tariff-card",
+  TariffStars = "tariff-stars",
   Support = "support",
   Promo = "promo",
   Trial = "trial"

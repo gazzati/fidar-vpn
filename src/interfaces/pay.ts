@@ -9,3 +9,10 @@ export enum TariffName {
   Month3 = "3 Месяца",
   Year = "1 Год"
 }
+
+export enum PayMethod {
+  Card = "card",
+  Stars = "stars"
+}
+
+export const TELEGRAM_STARS_CURRENCY = "XTR"

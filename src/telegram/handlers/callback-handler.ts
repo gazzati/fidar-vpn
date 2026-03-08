@@ -6,7 +6,7 @@ import MessageService from "@services/messages"
 import PaymentService from "@services/payment"
 import { CallbackAction, parseCallbackData } from "@root/telegram/callback-data"
 
-import { PayTariff } from "@interfaces/pay"
+import { PayMethod, PayTariff } from "@interfaces/pay"
 
 import TelegramBot, { type User, type Chat, type CallbackQuery } from "node-telegram-bot-api"
 
@@ -45,6 +45,10 @@ class CallbackHandler {
         return this.messages.sendManual(chat)
       case CallbackAction.Pay:
         return this.messages.sendPay(from, chat)
+      case CallbackAction.PayCard:
+        return this.messages.sendPayTariffs(chat, PayMethod.Card)
+      case CallbackAction.PayStars:
+        return this.messages.sendPayTariffs(chat, PayMethod.Stars)
       case CallbackAction.Promo:
         return this.messages.sendPromo(chat)
       case CallbackAction.ChangeServer: {
@@ -58,6 +62,18 @@ class CallbackHandler {
         if (!tariff) return tgLogger.error(from, "Tariff not found")
 
         return this.payment.invoice(from, chat, Number(tariff))
+      }
+      case CallbackAction.TariffCard: {
+        const tariff = parsedData.param as PayTariff | undefined
+        if (!tariff) return tgLogger.error(from, "Tariff not found")
+
+        return this.payment.invoice(from, chat, Number(tariff), PayMethod.Card)
+      }
+      case CallbackAction.TariffStars: {
+        const tariff = parsedData.param as PayTariff | undefined
+        if (!tariff) return tgLogger.error(from, "Tariff not found")
+
+        return this.payment.invoice(from, chat, Number(tariff), PayMethod.Stars)
       }
     }
   }
