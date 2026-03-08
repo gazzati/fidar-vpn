@@ -8,9 +8,11 @@ import PaymentService from "@services/payment"
 import CallbackHandler from "@root/telegram/handlers/callback-handler"
 import CommandHandler, { COMMANDS } from "@root/telegram/handlers/command-handler"
 import PromoHandler from "@root/telegram/handlers/promo-handler"
+import SystemCommandHandler from "@root/telegram/handlers/system-command-handler"
 
 class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
+  private systemBot = new TelegramBot(config.systemTelegramToken, { polling: true })
 
   private waitingPromoIds: Array<number> = []
 
@@ -20,6 +22,7 @@ class Telegram {
 
   private callbacks = new CallbackHandler(this.bot, this.db, this.messages, this.payment)
   private commands = new CommandHandler(this.messages, this.callbacks)
+  private systemCommands = new SystemCommandHandler(this.systemBot)
   private promo = new PromoHandler(this.bot, this.db, this.messages, this.payment, this.waitingPromoIds)
 
   public process() {
@@ -35,6 +38,8 @@ class Telegram {
     this.bot.on("callback_query", query => this.callbacks.handle(query))
     this.bot.on("pre_checkout_query", query => this.payment.preCheckoutQuery(query))
     this.bot.on("successful_payment", message => this.payment.successfulPayment(message))
+
+    this.systemCommands.process()
   }
 }
 
