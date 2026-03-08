@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { sendMessage } from "@api/systemTg"
 import { User } from "node-telegram-bot-api"
 

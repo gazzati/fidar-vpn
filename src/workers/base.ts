@@ -45,7 +45,6 @@ abstract class Base {
     this.logger.log("Stopped")
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   public async loop() {}
 
   protected async sleep(pause = this.pauseMs) {

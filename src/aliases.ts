@@ -1,4 +1,4 @@
-import moduleAlias from "module-alias"
+import moduleAlias = require("module-alias")
 
 moduleAlias.addAliases({
   "@root": `${__dirname}/`,
