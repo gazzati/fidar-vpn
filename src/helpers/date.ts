@@ -49,7 +49,7 @@ export const getNewExpiredAt = (expiredAt: Date, months: number): Date => {
 
 export const getTrialExpiredAt = (): Date => {
   const expiredAt = new Date()
-  expiredAt.setMonth(expiredAt.getMonth() + 1)
+  expiredAt.setDate(expiredAt.getDate() + 7)
   return expiredAt
 }
 
