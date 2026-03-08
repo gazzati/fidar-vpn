@@ -20,7 +20,7 @@ const envVarsSchema = Joi.object({
   CURRENCY: Joi.string().allow("").default("RUB").description("Currency")
 })
 
-const { error, value: envVars } = envVarsSchema.validate(process.env)
+const { error, value: envVars } = envVarsSchema.validate(process.env, { allowUnknown: true })
 if (error) throw new Error(`Config validation error: ${error.message}`)
 
 const callbackData = {
