@@ -12,7 +12,11 @@ import type { User, Chat, InlineKeyboardButton } from "node-telegram-bot-api"
 import DbService from "./db"
 
 class MessageService {
-  constructor(private bot: TelegramBot, private db: DbService, private waitingPromoIds: Array<number>) {}
+  constructor(
+    private bot: TelegramBot,
+    private db: DbService,
+    private waitingPromoIds: Array<number>
+  ) {}
 
   public async sendStart(from: User, chat: Chat) {
     const client = await this.db.getClient(from)
@@ -26,7 +30,7 @@ class MessageService {
   }
 
   public sendLocations(chat: Chat, servers: Array<Server>) {
-    const data = servers.map(server => ({
+    const data = servers.map((server) => ({
       text: server.label,
       callback_data: buildCallbackData(CallbackAction.ChangeServer, server.name)
     }))
@@ -56,9 +60,24 @@ class MessageService {
     const tariffs = isCard ? CardTariff : StarsTariff
 
     this.sendMessage(chat, message, [
-      [{ text: `${tariffs.Month}${currencySymbol} - ${TariffName.Month}`, callback_data: buildCallbackData(tariffAction, tariffs.Month) }],
-      [{ text: `${tariffs.Month3}${currencySymbol} - ${TariffName.Month3}`, callback_data: buildCallbackData(tariffAction, tariffs.Month3) }],
-      [{ text: `${tariffs.Year}${currencySymbol} - ${TariffName.Year}`, callback_data: buildCallbackData(tariffAction, tariffs.Year) }],
+      [
+        {
+          text: `${tariffs.Month}${currencySymbol} - ${TariffName.Month}`,
+          callback_data: buildCallbackData(tariffAction, tariffs.Month)
+        }
+      ],
+      [
+        {
+          text: `${tariffs.Month3}${currencySymbol} - ${TariffName.Month3}`,
+          callback_data: buildCallbackData(tariffAction, tariffs.Month3)
+        }
+      ],
+      [
+        {
+          text: `${tariffs.Year}${currencySymbol} - ${TariffName.Year}`,
+          callback_data: buildCallbackData(tariffAction, tariffs.Year)
+        }
+      ],
       config.inlineKeyboardItem.promo,
       config.inlineKeyboardItem.pay
     ])

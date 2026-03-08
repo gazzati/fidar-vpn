@@ -30,7 +30,7 @@ export class Client {
   @Column({ nullable: true })
   last_name: string
 
-  @ManyToOne(() => Server, server => server.clients, {
+  @ManyToOne(() => Server, (server) => server.clients, {
     nullable: false
   })
   @JoinColumn({ name: "server_id", referencedColumnName: "id" })

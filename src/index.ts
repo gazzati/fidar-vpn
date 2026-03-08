@@ -26,7 +26,7 @@ class Telegram {
   private promo = new PromoHandler(this.bot, this.db, this.messages, this.payment, this.waitingPromoIds)
 
   public process() {
-    this.bot.on("message", msg => {
+    this.bot.on("message", (msg) => {
       const { from, chat, text } = msg
       if (!from || !text) return
 
@@ -35,9 +35,9 @@ class Telegram {
       this.promo.handle(from, chat, text)
     })
 
-    this.bot.on("callback_query", query => this.callbacks.handle(query))
-    this.bot.on("pre_checkout_query", query => this.payment.preCheckoutQuery(query))
-    this.bot.on("successful_payment", message => this.payment.successfulPayment(message))
+    this.bot.on("callback_query", (query) => this.callbacks.handle(query))
+    this.bot.on("pre_checkout_query", (query) => this.payment.preCheckoutQuery(query))
+    this.bot.on("successful_payment", (message) => this.payment.successfulPayment(message))
 
     this.systemCommands.process()
   }

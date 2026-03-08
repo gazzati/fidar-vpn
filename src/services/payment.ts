@@ -6,7 +6,13 @@ import config from "@root/config"
 import { Client } from "@database/entities/Client"
 import { getSubscriptionExpiredDate, getNewExpiredAt, dbDate } from "@helpers/date"
 import { tgLogger, error } from "@helpers/logger"
-import { getTariffName, getTariffMonths, getInvoiceAmount, getPaidAmount, getPayMethodByCurrency } from "@helpers/tariff"
+import {
+  getTariffName,
+  getTariffMonths,
+  getInvoiceAmount,
+  getPaidAmount,
+  getPayMethodByCurrency
+} from "@helpers/tariff"
 
 import { PayMethod, PaymentCurrency } from "@interfaces/pay"
 
@@ -14,7 +20,11 @@ import DbService from "./db"
 import MessageService from "./messages"
 
 class PaymentService {
-  constructor(private bot: TelegramBot, private db: DbService, private messages: MessageService) {}
+  constructor(
+    private bot: TelegramBot,
+    private db: DbService,
+    private messages: MessageService
+  ) {}
 
   public async preCheckoutQuery(query: PreCheckoutQuery) {
     const { from } = query

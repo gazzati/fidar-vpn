@@ -29,7 +29,7 @@ class SystemCommandHandler {
       ])
       .catch(() => null)
 
-    this.bot.on("message", message => {
+    this.bot.on("message", (message) => {
       this.handle(message)
     })
   }
@@ -73,14 +73,9 @@ class SystemCommandHandler {
   private async getStatusMessage() {
     const [health, stats] = await Promise.all([this.getHealthMessage(), this.getStatsMessage()])
 
-    return [
-      "📊 Статус приложения",
-      `⏱ uptime: ${this.formatDuration(process.uptime())}`,
-      "",
-      health,
-      "",
-      stats
-    ].join("\n")
+    return ["📊 Статус приложения", `⏱ uptime: ${this.formatDuration(process.uptime())}`, "", health, "", stats].join(
+      "\n"
+    )
   }
 
   private async getHealthMessage() {
@@ -136,7 +131,7 @@ class SystemCommandHandler {
     }
 
     const checks = await Promise.all(
-      activeServers.map(async server => {
+      activeServers.map(async (server) => {
         try {
           const clients = await getClients(server.ip)
           return `✅ ${server.name} (${server.ip}) clients=${clients.length}`

@@ -22,7 +22,7 @@ export class Server {
   @Column({ default: false })
   default: boolean
 
-  @OneToMany(() => Client, client => client.server)
+  @OneToMany(() => Client, (client) => client.server)
   clients: Array<Client>
 
   @Column()

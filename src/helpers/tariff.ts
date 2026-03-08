@@ -1,7 +1,6 @@
 import { CardTariff, PayMethod, PaymentCurrency, StarsTariff, TariffName } from "@interfaces/pay"
 
-export const isTelegramStarsCurrency = (currency: string): boolean =>
-  currency.toUpperCase() === PaymentCurrency.Stars
+export const isTelegramStarsCurrency = (currency: string): boolean => currency.toUpperCase() === PaymentCurrency.Stars
 
 export const getTariffName = (method: PayMethod, tariff: number): TariffName | undefined => {
   if (method === PayMethod.Card) {

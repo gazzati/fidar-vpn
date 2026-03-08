@@ -65,13 +65,15 @@ class CallbackHandler {
       }
       case CallbackAction.TariffCard: {
         const tariff = Number(parsedData.param)
-        if (Number.isNaN(tariff) || !Object.values(CardTariff).includes(tariff)) return tgLogger.error(from, "Tariff not found")
+        if (Number.isNaN(tariff) || !Object.values(CardTariff).includes(tariff))
+          return tgLogger.error(from, "Tariff not found")
 
         return this.payment.invoice(from, chat, tariff, PayMethod.Card)
       }
       case CallbackAction.TariffStars: {
         const tariff = Number(parsedData.param)
-        if (Number.isNaN(tariff) || !Object.values(StarsTariff).includes(tariff)) return tgLogger.error(from, "Tariff not found")
+        if (Number.isNaN(tariff) || !Object.values(StarsTariff).includes(tariff))
+          return tgLogger.error(from, "Tariff not found")
 
         return this.payment.invoice(from, chat, tariff, PayMethod.Stars)
       }
@@ -172,12 +174,7 @@ class CallbackHandler {
   }
 
   private async sendFiles(chatId: number, userName: string, serverName: string, conf: string, qr: string) {
-    await this.bot.sendDocument(
-      chatId,
-      Buffer.from(conf, "base64"),
-      {},
-      { filename: `fidar${serverName}.conf` }
-    )
+    await this.bot.sendDocument(chatId, Buffer.from(conf, "base64"), {}, { filename: `fidar${serverName}.conf` })
     await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fidar-${userName}-${serverName}` })
   }
 

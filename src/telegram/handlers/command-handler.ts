@@ -14,7 +14,10 @@ export const COMMANDS: Array<string> = [
 ]
 
 class CommandHandler {
-  constructor(private messages: MessageService, private callbacks: CallbackHandler) {}
+  constructor(
+    private messages: MessageService,
+    private callbacks: CallbackHandler
+  ) {}
 
   public handle(from: User, chat: Chat, action: string) {
     tgLogger.log(from, `📋 Command ${action}`)

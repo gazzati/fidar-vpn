@@ -24,7 +24,7 @@ export const AppDataSource = new DataSource({
 
 AppDataSource.initialize()
   .then(() => log(`💾 Connected to the database: ${config.psqlDatabase} \n`))
-  .catch(e => error(e))
+  .catch((e) => error(e))
 
 export const entities = {
   Server: AppDataSource.getRepository(Server),

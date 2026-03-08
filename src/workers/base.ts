@@ -53,7 +53,7 @@ abstract class Base {
 
     while (this.running && elapsed < pause) {
       const timeout = Math.min(stepMs, pause - elapsed)
-      await new Promise(resolve => setTimeout(resolve, timeout))
+      await new Promise((resolve) => setTimeout(resolve, timeout))
       elapsed += timeout
     }
   }
