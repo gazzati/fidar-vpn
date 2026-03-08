@@ -135,7 +135,8 @@ class CallbackHandler {
 
       tgLogger.log(from, `✅ Client created server [${serverName}]`)
 
-      this.db.updateClientServer(from, server.id, response.public_key)
+      const updated = await this.db.updateClientServer(from, server.id, response.public_key)
+      if (!updated) return this.error(from, chat, "Client update error")
 
       if (client.server) await disableClient(client.server.ip, from.id)
     } catch (error: any) {

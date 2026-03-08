@@ -100,7 +100,8 @@ class PaymentService {
         if (!response) return false
       }
 
-      this.db.updateClientExpiredAt(client.user_id, newExpiredAt)
+      const updated = await this.db.updateClientExpiredAt(client.user_id, newExpiredAt)
+      if (!updated) return false
 
       return true
     } catch (e) {
