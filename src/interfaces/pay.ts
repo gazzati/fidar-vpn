@@ -5,7 +5,7 @@ export enum CardTariff {
 }
 
 export enum StarsTariff {
-  Month = 1,
+  Month = 80,
   Month3 = 250,
   Year = 1000
 }
