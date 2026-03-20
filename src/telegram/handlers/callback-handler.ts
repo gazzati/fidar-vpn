@@ -11,9 +11,6 @@ import { CardTariff, PayMethod, StarsTariff } from "@interfaces/pay"
 import TelegramBot, { type User, type Chat, type CallbackQuery } from "node-telegram-bot-api"
 
 class CallbackHandler {
-  private readonly lastCallbackAt = new Map<number, number>()
-  private readonly callbackCooldownMs = 3_000
-
   constructor(
     private bot: TelegramBot,
     private db: DbService,
@@ -25,15 +22,6 @@ class CallbackHandler {
     const { message, data, from } = query
     if (!message || !data || !from) return
 
-    const lastCallbackAt = this.lastCallbackAt.get(from.id) || 0
-    const now = Date.now()
-    if (now - lastCallbackAt < this.callbackCooldownMs) {
-      tgLogger.error(from, "Не нажимайте кнопку слишком часто")
-      return this.bot
-        .answerCallbackQuery(query.id, { text: "Не нажимайте кнопку слишком часто", show_alert: true })
-        .catch(() => null)
-    }
-    this.lastCallbackAt.set(from.id, now)
 
     tgLogger.log(from, `🤙 Callback-query ${data}`)
 
