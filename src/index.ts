@@ -25,19 +25,44 @@ class Telegram {
   private systemCommands = new SystemCommandHandler(this.systemBot)
   private promo = new PromoHandler(this.bot, this.db, this.messages, this.payment, this.waitingPromoIds)
 
+  private async isBlocked(userId?: number): Promise<boolean> {
+    if (!userId) return false
+
+    return await this.db.isBlacklisted(userId)
+  }
+
   public process() {
-    this.bot.on("message", (msg) => {
+    this.bot.on("message", async (msg) => {
       const { from, chat, text } = msg
       if (!from || !text) return
+      if (await this.isBlocked(from.id)) return
 
       if (COMMANDS.includes(text)) return this.commands.handle(from, chat, text)
 
       this.promo.handle(from, chat, text)
     })
 
-    this.bot.on("callback_query", (query) => this.callbacks.handle(query))
-    this.bot.on("pre_checkout_query", (query) => this.payment.preCheckoutQuery(query))
-    this.bot.on("successful_payment", (message) => this.payment.successfulPayment(message))
+    this.bot.on("callback_query", async (query) => {
+      if (await this.isBlocked(query.from?.id)) return
+
+      return this.callbacks.handle(query)
+    })
+
+    this.bot.on("pre_checkout_query", async (query) => {
+      if (await this.isBlocked(query.from?.id)) {
+        return this.bot.answerPreCheckoutQuery(query.id, false, {
+          error_message: config.phrases.FAILED_PAYMENT_MESSAGE
+        })
+      }
+
+      return this.payment.preCheckoutQuery(query)
+    })
+
+    this.bot.on("successful_payment", async (message) => {
+      if (await this.isBlocked(message.from?.id)) return
+
+      return this.payment.successfulPayment(message)
+    })
 
     this.systemCommands.process()
   }

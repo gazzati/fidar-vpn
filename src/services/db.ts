@@ -9,6 +9,11 @@ import { getTrialExpiredAt } from "@helpers/date"
 import type { User, Chat } from "node-telegram-bot-api"
 
 class DbService {
+  public async isBlacklisted(userId: number): Promise<boolean> {
+    const blacklisted = await entities.Blacklist.exist({ where: { user_id: userId } })
+    return blacklisted
+  }
+
   public async getClient(from: User): Promise<Client | null> {
     return await entities.Client.findOne({ where: { user_id: from.id } })
   }

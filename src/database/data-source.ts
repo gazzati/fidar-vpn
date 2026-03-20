@@ -2,6 +2,7 @@ import { DataSource } from "typeorm"
 
 import config from "@root/config"
 
+import { Blacklist } from "@database/entities/Blacklist"
 import { Client } from "@database/entities/Client"
 import { Payment } from "@database/entities/Payment"
 import { Promo } from "@database/entities/Promo"
@@ -15,7 +16,7 @@ export const AppDataSource = new DataSource({
   database: config.psqlDatabase,
   username: config.psqlUsername,
   password: config.psqlPassword,
-  entities: [Server, Client, Promo, Payment],
+  entities: [Server, Client, Promo, Payment, Blacklist],
   subscribers: [],
   migrations: [],
   synchronize: true
@@ -27,6 +28,7 @@ AppDataSource.initialize()
   .catch((e) => error(e))
 
 export const entities = {
+  Blacklist: AppDataSource.getRepository(Blacklist),
   Server: AppDataSource.getRepository(Server),
   Client: AppDataSource.getRepository(Client),
   Promo: AppDataSource.getRepository(Promo),
