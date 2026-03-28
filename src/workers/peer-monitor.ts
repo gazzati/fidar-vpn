@@ -22,8 +22,14 @@ class PeerMonitor extends Base {
       entities.Client.find({ where: { active: true }, relations: { server: true } })
     ])
 
+    this.logger.log(`Run started: servers=${servers.length}, active_clients=${clients.length}`)
+
+    let hasProblems = false
+
     for (const server of servers) {
       const serverClients = clients.filter((client) => client.server?.id === server.id && client.public_key)
+
+      this.logger.log(`Checking server=${server.name} ip=${server.ip} clients=${serverClients.length}`)
 
       try {
         const metrics = await getPeersMetrics(server.ip)
@@ -32,13 +38,17 @@ class PeerMonitor extends Base {
           (peer) => getPeerHealthStatus(peer) === PeerHealthStatus.Healthy
         ).length
 
+        this.logger.log(`Server metrics: server=${server.name} peers=${metrics.peers.length} healthy=${healthyPeers}`)
+
         await this.handleServerRecovered(server.id, server.name)
         await this.handleZeroHealthyPeers(server.id, server.name, serverClients.length, healthyPeers)
+        if (this.serverStates.get(server.id)?.zeroHealthyPeers) hasProblems = true
 
         for (const client of serverClients) {
           const peer = peersMap.get(client.public_key)
 
           if (!peer) {
+            hasProblems = true
             await this.handleMissingPeer(server.name, client)
             continue
           }
@@ -46,9 +56,17 @@ class PeerMonitor extends Base {
           this.peerMissingAlerts.delete(client.id)
         }
       } catch (e: any) {
+        hasProblems = true
         await this.handleServerUnavailable(server.id, server.name, server.ip, e?.message)
       }
     }
+
+    if (!hasProblems) {
+      this.logger.log("Run finished: all good")
+      return
+    }
+
+    this.logger.log("Run finished: problems detected")
   }
 
   private async handleServerUnavailable(serverId: number, serverName: string, serverIp: string, message?: string) {
