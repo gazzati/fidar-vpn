@@ -165,7 +165,7 @@ class SystemCommandHandler {
     }
 
     const client = await entities.Client.findOne({
-      where: { id: clientId },
+      where: { user_id: clientId },
       relations: { server: true }
     })
 
@@ -187,7 +187,6 @@ class SystemCommandHandler {
 
       if (!peer) {
         return [
-          `🔎 Peer ${client.id}`,
           `👤 user_id=${client.user_id}`,
           `🌍 server=${client.server.name} (${client.server.ip})`,
           `📅 expires=${formatDateTime(client.expired_at)}`,
@@ -199,7 +198,6 @@ class SystemCommandHandler {
       const status = this.getPeerStatusLabel(peer)
 
       return [
-        `🔎 Peer ${client.id}`,
         `👤 user_id=${client.user_id}`,
         `🌍 server=${client.server.name} (${client.server.ip})`,
         `✅ client_active=${client.active ? "yes" : "no"}`,
@@ -214,7 +212,7 @@ class SystemCommandHandler {
       ].join("\n")
     } catch (e: any) {
       return [
-        `🔎 Peer ${client.id}`,
+        `👤 user_id=${client.user_id}`,
         `🌍 server=${client.server.name} (${client.server.ip})`,
         `❌ не удалось получить метрики: ${e?.message || "unknown error"}`
       ].join("\n")
