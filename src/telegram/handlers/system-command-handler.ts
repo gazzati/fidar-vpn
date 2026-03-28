@@ -1,18 +1,21 @@
 import TelegramBot, { type Message } from "node-telegram-bot-api"
 import { Between } from "typeorm"
 
-import { getClients } from "@api/server"
+import { getClients, getPeersMetrics } from "@api/server"
 import config from "@root/config"
 import { AppDataSource, entities } from "@database/data-source"
+import { formatAge, formatBytes, formatDateTime, getPeerHealthStatus, PeerHealthStatus } from "@helpers/peer-monitor"
 
 enum SystemTelegramCommand {
   Help = "/help",
+  Peer = "/peer",
   Status = "/status",
   Servers = "/servers"
 }
 
 const SYSTEM_COMMANDS: Array<string> = [
   SystemTelegramCommand.Help,
+  SystemTelegramCommand.Peer,
   SystemTelegramCommand.Status,
   SystemTelegramCommand.Servers
 ]
@@ -24,6 +27,7 @@ class SystemCommandHandler {
     this.bot
       .setMyCommands([
         { command: "help", description: "Показать список системных команд" },
+        { command: "peer", description: "Текущий статус пира по client_id" },
         { command: "status", description: "Краткий статус приложения" },
         { command: "servers", description: "Проверить доступность VPN серверов" }
       ])
@@ -50,6 +54,9 @@ class SystemCommandHandler {
       case SystemTelegramCommand.Help:
         await this.safeSend(chat.id, this.getHelpMessage())
         return
+      case SystemTelegramCommand.Peer:
+        await this.safeSend(chat.id, await this.getPeerMessage(text))
+        return
       case SystemTelegramCommand.Servers:
         await this.safeSend(chat.id, await this.getServersMessage())
         return
@@ -64,6 +71,7 @@ class SystemCommandHandler {
   private getHelpMessage() {
     return [
       "Системные команды:",
+      "/peer {client_id} - live-статус конкретного пира",
       "/status - общий статус приложения",
       "/servers - доступность VPN серверов",
       "/help - список команд"
@@ -142,6 +150,90 @@ class SystemCommandHandler {
     )
 
     return ["🌍 Servers", ...checks].join("\n")
+  }
+
+  private async getPeerMessage(text: string) {
+    if (!AppDataSource.isInitialized) {
+      return "🔎 Peer\n❌ БД не инициализирована"
+    }
+
+    const [, rawClientId] = text.trim().split(/\s+/)
+    const clientId = Number(rawClientId)
+
+    if (!clientId) {
+      return "🔎 Peer\n⚠️ Использование: /peer {client_id}"
+    }
+
+    const client = await entities.Client.findOne({
+      where: { id: clientId },
+      relations: { server: true }
+    })
+
+    if (!client) {
+      return `🔎 Peer\n❌ Клиент ${clientId} не найден`
+    }
+
+    if (!client.server) {
+      return `🔎 Peer\n❌ У клиента ${clientId} не найден сервер`
+    }
+
+    if (!client.public_key) {
+      return `🔎 Peer\n❌ У клиента ${clientId} не сохранен public_key`
+    }
+
+    try {
+      const response = await getPeersMetrics(client.server.ip)
+      const peer = response.peers.find((item) => item.public_key === client.public_key)
+
+      if (!peer) {
+        return [
+          `🔎 Peer ${client.id}`,
+          `👤 user_id=${client.user_id}`,
+          `🌍 server=${client.server.name} (${client.server.ip})`,
+          `📅 expires=${formatDateTime(client.expired_at)}`,
+          `🔑 public_key=${client.public_key}`,
+          "❌ peer отсутствует на сервере"
+        ].join("\n")
+      }
+
+      const status = this.getPeerStatusLabel(peer)
+
+      return [
+        `🔎 Peer ${client.id}`,
+        `👤 user_id=${client.user_id}`,
+        `🌍 server=${client.server.name} (${client.server.ip})`,
+        `✅ client_active=${client.active ? "yes" : "no"}`,
+        `📅 expires=${formatDateTime(client.expired_at)}`,
+        `📡 status=${status}`,
+        `🤝 handshake=${formatDateTime(peer.latest_handshake_at)} (${formatAge(peer.latest_handshake_at)})`,
+        `🌐 endpoint=${peer.endpoint || "unknown"}`,
+        `⬇️ rx=${formatBytes(peer.rx_bytes)}`,
+        `⬆️ tx=${formatBytes(peer.tx_bytes)}`,
+        `🛣 allowed_ips=${peer.allowed_ips}`,
+        `🕒 server_time=${formatDateTime(response.server_time)}`
+      ].join("\n")
+    } catch (e: any) {
+      return [
+        `🔎 Peer ${client.id}`,
+        `🌍 server=${client.server.name} (${client.server.ip})`,
+        `❌ не удалось получить метрики: ${e?.message || "unknown error"}`
+      ].join("\n")
+    }
+  }
+
+  private getPeerStatusLabel(peer: Awaited<ReturnType<typeof getPeersMetrics>>["peers"][number]) {
+    const status = getPeerHealthStatus(peer)
+
+    switch (status) {
+      case PeerHealthStatus.Healthy:
+        return "healthy"
+      case PeerHealthStatus.Stale:
+        return "stale"
+      case PeerHealthStatus.NeverConnected:
+        return "never_connected"
+      default:
+        return "unknown"
+    }
   }
 
   private formatDuration(secondsRaw: number) {
