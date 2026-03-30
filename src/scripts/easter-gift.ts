@@ -4,7 +4,6 @@ import "../aliases"
 // yarn build && node build/scripts/easter-gift.js
 
 import TelegramBot from "node-telegram-bot-api"
-import { MoreThan } from "typeorm"
 
 import config from "@root/config"
 import { AppDataSource, entities } from "@database/data-source"
