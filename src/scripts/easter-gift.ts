@@ -1,7 +1,7 @@
 import "../aliases"
 
 // Run once:
-// yarn build && node build/scripts/easter-gift.js
+// yarn build && PSQL_HOST="127.0.0.1" node build/scripts/easter-gift.js
 
 import TelegramBot from "node-telegram-bot-api"
 
@@ -10,7 +10,7 @@ import { AppDataSource, entities } from "@database/data-source"
 import { dbDate, getNewExpiredAt } from "@helpers/date"
 import { error, log } from "@helpers/logger"
 
-const EASTER_MESSAGE = `Поздравляем вас со Светлой Пасхой! ✨
+const EASTER_MESSAGE = `Поздравляем вас со Светлой Пасхой!✨
 Пусть праздник Воскресения Христова принесет в ваш дом мир, радость, надежду и душевное тепло.
 
 В знак нашей благодарности мы дарим всем активным клиентам 1 месяц бесплатного пользования сервисом.
