@@ -7,9 +7,10 @@ import { buildCallbackData, CallbackAction } from "@root/telegram/callback-data"
 dotenv.config()
 
 const envVarsSchema = Joi.object({
-  TELEGRAM_TOKEN: Joi.string().description("Telegram token"),
-  SYSTEM_TELEGRAM_TOKEN: Joi.string().description("System telegram token"),
-  SYSTEM_TELEGRAM_CHAT_ID: Joi.string().description("System telegram chat id"),
+  TELEGRAM_TOKEN: Joi.string().trim().required().description("Telegram token"),
+  SYSTEM_TELEGRAM_TOKEN: Joi.string().trim().allow("").default("").description("System telegram token"),
+  SYSTEM_TELEGRAM_CHAT_ID: Joi.string().trim().allow("").default("").description("System telegram chat id"),
+  TELEGRAM_IP_FAMILY: Joi.number().valid(4, 6).optional().description("Force Telegram API IPv4 or IPv6"),
 
   PSQL_HOST: Joi.string().default("localhost").description("Database Host"),
   PSQL_DATABASE: Joi.string().default("database").description("Database Name"),
@@ -21,6 +22,15 @@ const envVarsSchema = Joi.object({
 
 const { error, value: envVars } = envVarsSchema.validate(process.env, { allowUnknown: true })
 if (error) throw new Error(`Config validation error: ${error.message}`)
+
+const hasSystemTelegramToken = Boolean(envVars.SYSTEM_TELEGRAM_TOKEN)
+const hasSystemTelegramChatId = Boolean(envVars.SYSTEM_TELEGRAM_CHAT_ID)
+
+if (hasSystemTelegramToken !== hasSystemTelegramChatId) {
+  throw new Error("Config validation error: SYSTEM_TELEGRAM_TOKEN and SYSTEM_TELEGRAM_CHAT_ID must be set together")
+}
+
+const isSystemTelegramEnabled = hasSystemTelegramToken && hasSystemTelegramChatId
 
 const callbackData = {
   start: CallbackAction.Start,
@@ -42,8 +52,10 @@ const callbackData = {
 
 export default {
   telegramToken: envVars.TELEGRAM_TOKEN,
-  systemTelegramToken: envVars.SYSTEM_TELEGRAM_TOKEN,
-  systemTelegramChatId: Number(envVars.SYSTEM_TELEGRAM_CHAT_ID),
+  systemTelegramToken: envVars.SYSTEM_TELEGRAM_TOKEN || null,
+  systemTelegramChatId: isSystemTelegramEnabled ? Number(envVars.SYSTEM_TELEGRAM_CHAT_ID) : null,
+  isSystemTelegramEnabled,
+  telegramIpFamily: envVars.TELEGRAM_IP_FAMILY ?? null,
 
   psqlHost: envVars.PSQL_HOST,
   psqlDatabase: envVars.PSQL_DATABASE,

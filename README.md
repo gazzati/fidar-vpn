@@ -18,7 +18,32 @@ yarn
 cp .env.example .env
 ```
 
-3. Build and start:
+If the bot runs on a host with broken IPv6 connectivity to Telegram, set:
+```bash
+TELEGRAM_IP_FAMILY=4
+```
+
+3. Start local PostgreSQL:
+```bash
+docker compose -f docker-compose.db.yml up -d
+```
+
+Check status:
+```bash
+docker compose -f docker-compose.db.yml ps
+```
+
+Stop DB:
+```bash
+docker compose -f docker-compose.db.yml down
+```
+
+Reset DB data:
+```bash
+docker compose -f docker-compose.db.yml down -v
+```
+
+4. Build and start:
 ```bash
 yarn build
 yarn start
