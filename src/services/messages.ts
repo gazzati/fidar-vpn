@@ -47,16 +47,25 @@ class MessageService {
 
     this.sendMessage(chat, config.phrases.PAY_MESSAGE, [
       config.inlineKeyboardItem.payCard,
+      config.inlineKeyboardItem.payCardLink,
       config.inlineKeyboardItem.payStars,
       config.inlineKeyboardItem.subscription
     ])
   }
 
-  public sendPayTariffs(chat: Chat, method: PayMethod) {
+  public sendPayTariffs(chat: Chat, method: PayMethod, useExternalLink = false) {
     const isCard = method === PayMethod.Card
-    const tariffAction = isCard ? CallbackAction.TariffCard : CallbackAction.TariffStars
+    const tariffAction = isCard
+      ? useExternalLink
+        ? CallbackAction.TariffCardLink
+        : CallbackAction.TariffCard
+      : CallbackAction.TariffStars
     const currencySymbol = isCard ? "₽" : "⭐"
-    const message = isCard ? config.phrases.PAY_CARD_MESSAGE : config.phrases.PAY_STARS_MESSAGE
+    const message = isCard
+      ? useExternalLink
+        ? config.phrases.PAY_CARD_LINK_MESSAGE
+        : config.phrases.PAY_CARD_MESSAGE
+      : config.phrases.PAY_STARS_MESSAGE
     const tariffs = isCard ? CardTariff : StarsTariff
 
     this.sendMessage(chat, message, [
@@ -81,6 +90,19 @@ class MessageService {
       config.inlineKeyboardItem.promo,
       config.inlineKeyboardItem.pay
     ])
+  }
+
+  public sendExternalPaymentLink(chat: Chat, url: string, paymentId: string, paidUntil: string | null) {
+    this.sendMessage(
+      chat,
+      `${config.phrases.PAYMENT_LINK_MESSAGE}\n\nВаша подписка будет продлена до ${paidUntil}`,
+      [
+        [{ text: "🌐 Перейти к оплате", url }],
+        [{ text: "✅ Проверить оплату", callback_data: buildCallbackData(CallbackAction.CheckPayment, paymentId) }],
+        config.inlineKeyboardItem.subscription,
+        config.inlineKeyboardItem.main
+      ]
+    )
   }
 
   public sendSubscription(chat: Chat, serverLabel: string, paidUntil: string | null, active: boolean) {
@@ -136,6 +158,18 @@ class MessageService {
 
   public sendSuccessfulPayment(chat: Chat, paidUntil: string | null) {
     this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PAYMENT_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
+      config.inlineKeyboardItem.subscription,
+      config.inlineKeyboardItem.locations,
+      config.inlineKeyboardItem.main
+    ])
+  }
+
+  public sendPaymentPending(chat: Chat) {
+    this.sendMessage(chat, config.phrases.PAYMENT_PENDING_MESSAGE, [config.inlineKeyboardItem.main])
+  }
+
+  public sendPaymentAlreadyConfirmed(chat: Chat, paidUntil: string | null) {
+    this.sendMessage(chat, `${config.phrases.PAYMENT_ALREADY_CONFIRMED_MESSAGE}\n\nПодписка оплачена до ${paidUntil}`, [
       config.inlineKeyboardItem.subscription,
       config.inlineKeyboardItem.locations,
       config.inlineKeyboardItem.main

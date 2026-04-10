@@ -1,5 +1,7 @@
 import { enableClient } from "@api/server"
+import axios from "axios"
 import TelegramBot, { Chat, User, PreCheckoutQuery, Message } from "node-telegram-bot-api"
+import { randomUUID } from "crypto"
 
 import config from "@root/config"
 
@@ -20,6 +22,8 @@ import DbService from "./db"
 import MessageService from "./messages"
 
 class PaymentService {
+  private readonly yookassaApiUrl = "https://api.yookassa.ru/v3/payments"
+
   constructor(
     private bot: TelegramBot,
     private db: DbService,
@@ -56,44 +60,16 @@ class PaymentService {
     }
     const paidAmount = getPaidAmount(tariff, successfulPayment.currency)
     const method = getPayMethodByCurrency(successfulPayment.currency)
-
-    const client = await this.db.getClientWithServer(from)
-    if (!client?.server) {
-      error("Client not found", chat)
-      return this.messages.sendServerError(chat)
-    }
-
-    const months = getTariffMonths(method, paidAmount)
-    if (months === undefined) {
-      error(`Error month calculating for tariff: ${paidAmount}`, chat)
-      return this.messages.sendServerError(chat)
-    }
-
-    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
-    const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
-
-    const paymentSaved = await this.db.savePayment({
-      clientId: client.id,
+    await this.finalizePayment({
+      from,
+      chat,
       amount: paidAmount,
       currency: successfulPayment.currency,
-      months,
-      paidUntil: dbDate(newExpiredAt),
-      invoicePayload: successfulPayment.invoice_payload,
+      method,
       telegramPaymentChargeId: successfulPayment.telegram_payment_charge_id,
+      invoicePayload: successfulPayment.invoice_payload,
       providerPaymentChargeId: successfulPayment.provider_payment_charge_id
     })
-    if (!paymentSaved) {
-      error("Payment saving error", chat)
-      return this.messages.sendServerError(chat)
-    }
-
-    const success = await this.renewSubscription(client, dbDate(newExpiredAt))
-    if (!success) {
-      error("Subscription renew error", chat)
-      return this.messages.sendServerError(chat)
-    }
-
-    this.messages.sendSuccessfulPayment(chat, paidUntil)
     tgLogger.log(from, `🔥 Successful payment amount: [${paidAmount} ${successfulPayment.currency}]`)
   }
 
@@ -131,6 +107,117 @@ class PaymentService {
     )
   }
 
+  public async createPaymentLink(from: User, chat: Chat, tariff: number) {
+    const client = await this.db.getClient(from)
+    if (!client) {
+      error("Client not found", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    const tariffName = getTariffName(PayMethod.Card, tariff)
+    const months = getTariffMonths(PayMethod.Card, tariff)
+    if (!tariffName || !months) {
+      error(`Tariff not found for external payment [${tariff}]`, chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    if (!config.yookassaShopId || !config.yookassaSecretKey || !config.yookassaReturnUrl) {
+      error("YooKassa credentials are required for external payments", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
+    const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
+
+    try {
+      const response = await axios.post<YooKassaPaymentResponse>(
+        this.yookassaApiUrl,
+        {
+          amount: {
+            value: tariff.toFixed(2),
+            currency: PaymentCurrency.Rub
+          },
+          capture: true,
+          confirmation: {
+            type: "redirect",
+            return_url: config.yookassaReturnUrl
+          },
+          description: `Оплата подписки Fidar VPN на ${tariffName}`,
+          metadata: {
+            user_id: from.id.toString(),
+            tariff: tariff.toString(),
+            months: months.toString(),
+            chat_id: chat.id.toString()
+          }
+        },
+        {
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${config.yookassaShopId}:${config.yookassaSecretKey}`).toString("base64")}`,
+            "Content-Type": "application/json",
+            "Idempotence-Key": randomUUID()
+          },
+          timeout: 10_000
+        }
+      )
+
+      const payment = response.data
+      const paymentUrl = payment.confirmation?.confirmation_url
+      const paymentId = payment.id
+      if (!paymentId || !paymentUrl) {
+        error("YooKassa confirmation url not found", payment)
+        return this.messages.sendServerError(chat)
+      }
+
+      const confirmedPaymentUrl: string = paymentUrl
+      const confirmedPaymentId: string = paymentId
+      return this.messages.sendExternalPaymentLink(chat, confirmedPaymentUrl, confirmedPaymentId, paidUntil)
+    } catch (e: any) {
+      error("YooKassa create payment error", e.response?.data || e.message)
+      return this.messages.sendServerError(chat)
+    }
+  }
+
+  public async checkPayment(from: User, chat: Chat, paymentId: string) {
+    if (!config.yookassaShopId || !config.yookassaSecretKey) {
+      error("YooKassa credentials are required for payment status checks", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    try {
+      const response = await axios.get<YooKassaPaymentResponse>(`${this.yookassaApiUrl}/${paymentId}`, {
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${config.yookassaShopId}:${config.yookassaSecretKey}`).toString("base64")}`
+        },
+        timeout: 10_000
+      })
+
+      const payment = response.data
+      if (payment.status !== "succeeded") {
+        return this.messages.sendPaymentPending(chat)
+      }
+
+      const tariff = Number(payment.metadata?.tariff)
+      if (Number.isNaN(tariff)) {
+        error("YooKassa payment metadata tariff is invalid", payment)
+        return this.messages.sendServerError(chat)
+      }
+
+      return await this.finalizePayment({
+        from,
+        chat,
+        amount: tariff,
+        currency: payment.amount.currency,
+        method: PayMethod.Card,
+        telegramPaymentChargeId: payment.id,
+        providerPaymentChargeId: payment.payment_method?.id,
+        invoicePayload: payment.description
+      })
+    } catch (e: any) {
+      error("YooKassa payment status error", e.response?.data || e.message)
+      return this.messages.sendServerError(chat)
+    }
+  }
+
   public async renewSubscription(client: Client, newExpiredAt: string): Promise<boolean> {
     try {
       if (client.public_key && !client.active) {
@@ -147,6 +234,85 @@ class PaymentService {
       return false
     }
   }
+
+  private async finalizePayment(params: FinalizePaymentParams) {
+    const { from, chat, amount, currency, method, telegramPaymentChargeId, invoicePayload, providerPaymentChargeId } =
+      params
+
+    const client = await this.db.getClientWithServer(from)
+    if (!client?.server) {
+      error("Client not found", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    const exists = await this.db.hasPayment(telegramPaymentChargeId)
+    if (exists) {
+      const paidUntil = getSubscriptionExpiredDate(client.expired_at)
+      return this.messages.sendPaymentAlreadyConfirmed(chat, paidUntil)
+    }
+
+    const months = getTariffMonths(method, amount)
+    if (months === undefined) {
+      error(`Error month calculating for tariff: ${amount}`, chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
+    const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
+
+    const paymentSaved = await this.db.savePayment({
+      clientId: client.id,
+      amount,
+      currency,
+      months,
+      paidUntil: dbDate(newExpiredAt),
+      invoicePayload,
+      telegramPaymentChargeId,
+      providerPaymentChargeId
+    })
+    if (!paymentSaved) {
+      error("Payment saving error", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    const success = await this.renewSubscription(client, dbDate(newExpiredAt))
+    if (!success) {
+      error("Subscription renew error", chat)
+      return this.messages.sendServerError(chat)
+    }
+
+    return this.messages.sendSuccessfulPayment(chat, paidUntil)
+  }
 }
 
 export default PaymentService
+
+interface FinalizePaymentParams {
+  from: User
+  chat: Chat
+  amount: number
+  currency: string
+  method: PayMethod
+  telegramPaymentChargeId: string
+  invoicePayload?: string
+  providerPaymentChargeId?: string
+}
+
+interface YooKassaPaymentResponse {
+  id: string
+  status: string
+  description?: string
+  amount: {
+    value: string
+    currency: string
+  }
+  confirmation?: {
+    type: string
+    confirmation_url?: string | null
+  }
+  payment_method?: {
+    id?: string
+    type?: string
+  }
+  metadata?: Record<string, string>
+}

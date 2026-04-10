@@ -16,7 +16,10 @@ const envVarsSchema = Joi.object({
   PSQL_USER: Joi.string().default("root").description("Database User"),
   PSQL_PASSWORD: Joi.string().allow("").default("root").description("Database Password"),
 
-  PROVIDER_TOKEN: Joi.string().allow("").default("").description("Provider token")
+  PROVIDER_TOKEN: Joi.string().allow("").default("").description("Provider token"),
+  YOOKASSA_SHOP_ID: Joi.string().allow("").default("").description("YooKassa shop id"),
+  YOOKASSA_SECRET_KEY: Joi.string().allow("").default("").description("YooKassa secret key"),
+  YOOKASSA_RETURN_URL: Joi.string().uri().allow("").default("").description("YooKassa return url")
 })
 
 const { error, value: envVars } = envVarsSchema.validate(process.env, { allowUnknown: true })
@@ -31,9 +34,11 @@ const callbackData = {
   subscription: CallbackAction.Subscription,
   pay: CallbackAction.Pay,
   payCard: CallbackAction.PayCard,
+  payCardLink: CallbackAction.PayCardLink,
   payStars: CallbackAction.PayStars,
   tariff: CallbackAction.Tariff,
   tariffCard: CallbackAction.TariffCard,
+  tariffCardLink: CallbackAction.TariffCardLink,
   tariffStars: CallbackAction.TariffStars,
   support: CallbackAction.Support,
   promo: CallbackAction.Promo,
@@ -51,6 +56,9 @@ export default {
   psqlPassword: envVars.PSQL_PASSWORD,
 
   providerToken: envVars.PROVIDER_TOKEN,
+  yookassaShopId: envVars.YOOKASSA_SHOP_ID,
+  yookassaSecretKey: envVars.YOOKASSA_SECRET_KEY,
+  yookassaReturnUrl: envVars.YOOKASSA_RETURN_URL,
 
   serversPort: 3003,
 
@@ -65,12 +73,17 @@ export default {
     SUBSCRIPTION_NOT_FOUND_MESSAGE: "🙅 У вас нет подписки",
     PAY_MESSAGE: "💵 Выберите способ оплаты",
     PAY_CARD_MESSAGE:
-      "💳 Выберите сумму для пополнения: \n\nОплата банковской картой. Если у вас есть промокод - нажмите кнопку ниже",
+      "💳 Выберите сумму для пополнения: \n\nОплата банковской картой внутри Telegram. Если у вас есть промокод - нажмите кнопку ниже",
+    PAY_CARD_LINK_MESSAGE:
+      "🌐 Выберите сумму для пополнения: \n\nОплата банковской картой через браузер и страницу YooKassa. Если у вас есть промокод - нажмите кнопку ниже",
     PAY_STARS_MESSAGE: "⭐ Выберите сумму для пополнения в Telegram Stars",
     PAY_NEW_USER_MESSAGE:
       "🫶 Мы ценим наших клиентов и поэтому рекомендуем сначала воспользоваться бесплатным периодом",
     NEED_PAY_MESSAGE: "💵 Необходимо произвести оплату",
     SUCCESSFUL_PAYMENT_MESSAGE: "👍 Оплата прошла успешно",
+    PAYMENT_LINK_MESSAGE: "🌐 Ссылка на оплату готова. Откройте страницу YooKassa в браузере и после оплаты нажмите кнопку проверки ниже",
+    PAYMENT_PENDING_MESSAGE: "⏳ Платеж еще не подтвержден. Если вы уже оплатили, подождите несколько секунд и нажмите проверку снова",
+    PAYMENT_ALREADY_CONFIRMED_MESSAGE: "👍 Этот платеж уже был подтвержден ранее",
     SUCCESSFUL_PROMO_MESSAGE: "👍 Промокод успешно применен",
     FAILED_PAYMENT_MESSAGE: "😢 Извините, что то пошло не так. Попробуйте позже",
     SEND_PROMO_MESSAGE: "😎 Отправьте промокод в чат",
@@ -94,7 +107,8 @@ export default {
     main: [{ text: "🔙 Вернуться на главную", callback_data: callbackData.start }],
     trial: [{ text: "🎁 Пробная подписка", callback_data: callbackData.trial }],
     pay: [{ text: "💵 Оплатить", callback_data: callbackData.pay }],
-    payCard: [{ text: "💳 Банковская карта", callback_data: callbackData.payCard }],
+    payCard: [{ text: "💳 Банковская карта в боте", callback_data: callbackData.payCard }],
+    payCardLink: [{ text: "🌐 Банковская карта в браузере", callback_data: callbackData.payCardLink }],
     payStars: [{ text: "⭐ Telegram Stars", callback_data: callbackData.payStars }],
     promo: [{ text: "🏷️ Ввести промокод", callback_data: callbackData.promo }],
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],

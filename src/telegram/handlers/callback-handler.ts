@@ -48,6 +48,8 @@ class CallbackHandler {
         return this.messages.sendPay(from, chat)
       case CallbackAction.PayCard:
         return this.messages.sendPayTariffs(chat, PayMethod.Card)
+      case CallbackAction.PayCardLink:
+        return this.messages.sendPayTariffs(chat, PayMethod.Card, true)
       case CallbackAction.PayStars:
         return this.messages.sendPayTariffs(chat, PayMethod.Stars)
       case CallbackAction.Promo:
@@ -71,12 +73,25 @@ class CallbackHandler {
 
         return this.payment.invoice(from, chat, tariff, PayMethod.Card)
       }
+      case CallbackAction.TariffCardLink: {
+        const tariff = Number(parsedData.param)
+        if (Number.isNaN(tariff) || !Object.values(CardTariff).includes(tariff))
+          return tgLogger.error(from, "Tariff not found")
+
+        return this.payment.createPaymentLink(from, chat, tariff)
+      }
       case CallbackAction.TariffStars: {
         const tariff = Number(parsedData.param)
         if (Number.isNaN(tariff) || !Object.values(StarsTariff).includes(tariff))
           return tgLogger.error(from, "Tariff not found")
 
         return this.payment.invoice(from, chat, tariff, PayMethod.Stars)
+      }
+      case CallbackAction.CheckPayment: {
+        const paymentId = parsedData.param
+        if (!paymentId) return tgLogger.error(from, "Payment id not found")
+
+        return this.payment.checkPayment(from, chat, paymentId)
       }
     }
   }

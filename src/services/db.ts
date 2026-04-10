@@ -93,6 +93,10 @@ class DbService {
     return true
   }
 
+  public async hasPayment(telegramPaymentChargeId: string): Promise<boolean> {
+    return await entities.Payment.exist({ where: { telegram_payment_charge_id: telegramPaymentChargeId } })
+  }
+
   public async getServer(name: string): Promise<Server | null> {
     return await entities.Server.findOne({ where: { name, active: true } })
   }
