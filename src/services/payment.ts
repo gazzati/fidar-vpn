@@ -348,6 +348,16 @@ class PaymentService {
       throw new Error("Subscription renew error")
     }
 
+    const from = {
+      id: client.user_id,
+      is_bot: false,
+      first_name: client.first_name || client.username || "unknown",
+      ...(client.last_name && { last_name: client.last_name }),
+      ...(client.username && { username: client.username })
+    } as User
+
+    tgLogger.log(from, `🔥 Successful payment amount: [${amount} ${currency}]`)
+
     const chat = { id: Number(client.chat_id) } as Chat
     this.messages.sendSuccessfulPayment(chat, paidUntil)
   }

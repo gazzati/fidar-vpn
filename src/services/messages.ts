@@ -98,7 +98,6 @@ class MessageService {
       `${config.phrases.PAYMENT_LINK_MESSAGE}\n\nВаша подписка будет продлена до ${paidUntil}`,
       [
         [{ text: "🌐 Перейти к оплате", url }],
-        config.inlineKeyboardItem.subscription,
         config.inlineKeyboardItem.main
       ]
     )
@@ -158,7 +157,6 @@ class MessageService {
   public sendSuccessfulPayment(chat: Chat, paidUntil: string | null) {
     this.sendMessage(chat, `${config.phrases.SUCCESSFUL_PAYMENT_MESSAGE}\n\nВаша подписка продлена до ${paidUntil}`, [
       config.inlineKeyboardItem.subscription,
-      config.inlineKeyboardItem.locations,
       config.inlineKeyboardItem.main
     ])
   }
