@@ -48,7 +48,7 @@ class CallbackHandler {
         return this.messages.sendPay(from, chat)
       case CallbackAction.PayCard:
         return this.messages.sendPayTariffs(chat, PayMethod.Card)
-      case CallbackAction.PayCardLink:
+      case CallbackAction.payCardBrowser:
         return this.messages.sendPayTariffs(chat, PayMethod.Card, true)
       case CallbackAction.PayStars:
         return this.messages.sendPayTariffs(chat, PayMethod.Stars)

@@ -7,7 +7,7 @@ export enum CallbackAction {
   Subscription = "subscription",
   Pay = "pay",
   PayCard = "pay-card",
-  PayCardLink = "pay-card-link",
+  payCardBrowser = "pay-card-link",
   PayStars = "pay-stars",
   Tariff = "tariff",
   TariffCard = "tariff-card",
