@@ -142,7 +142,7 @@ class PaymentService {
             type: "redirect",
             return_url: config.yookassaReturnUrl
           },
-          description: `Оплата подписки Fidar VPN на ${tariffName}`,
+          description: `Оплата подписки Fidar на ${tariffName}`,
           metadata: {
             user_id: from.id.toString(),
             tariff: tariff.toString(),
@@ -151,11 +151,7 @@ class PaymentService {
           }
         },
         {
-          headers: {
-            Authorization: `Basic ${Buffer.from(`${config.yookassaShopId}:${config.yookassaSecretKey}`).toString("base64")}`,
-            "Content-Type": "application/json",
-            "Idempotence-Key": randomUUID()
-          },
+          headers: this.getYooKassaHeaders(randomUUID()),
           timeout: 10_000
         }
       )
@@ -169,8 +165,7 @@ class PaymentService {
       }
 
       const confirmedPaymentUrl: string = paymentUrl
-      const confirmedPaymentId: string = paymentId
-      return this.messages.sendExternalPaymentLink(chat, confirmedPaymentUrl, confirmedPaymentId, paidUntil)
+      return this.messages.sendExternalPaymentLink(chat, confirmedPaymentUrl, paidUntil)
     } catch (e: any) {
       error("YooKassa create payment error", e.response?.data || e.message)
       return this.messages.sendServerError(chat)
@@ -185,9 +180,7 @@ class PaymentService {
 
     try {
       const response = await axios.get<YooKassaPaymentResponse>(`${this.yookassaApiUrl}/${paymentId}`, {
-        headers: {
-          Authorization: `Basic ${Buffer.from(`${config.yookassaShopId}:${config.yookassaSecretKey}`).toString("base64")}`
-        },
+        headers: this.getYooKassaHeaders(),
         timeout: 10_000
       })
 
@@ -216,6 +209,39 @@ class PaymentService {
       error("YooKassa payment status error", e.response?.data || e.message)
       return this.messages.sendServerError(chat)
     }
+  }
+
+  public async processYooKassaWebhook(notification: YooKassaWebhookNotification): Promise<void> {
+    if (notification.event !== "payment.succeeded") return
+
+    const payment = notification.object
+    const paymentId = payment.id
+    if (!paymentId) {
+      throw new Error("YooKassa webhook payment id is required")
+    }
+
+    const response = await axios.get<YooKassaPaymentResponse>(`${this.yookassaApiUrl}/${paymentId}`, {
+      headers: this.getYooKassaHeaders(),
+      timeout: 10_000
+    })
+
+    const verifiedPayment = response.data
+    if (verifiedPayment.status !== "succeeded") return
+
+    const userId = Number(verifiedPayment.metadata?.user_id)
+    const tariff = Number(verifiedPayment.metadata?.tariff)
+    if (Number.isNaN(userId) || Number.isNaN(tariff)) {
+      throw new Error("YooKassa webhook metadata is invalid")
+    }
+
+    await this.finalizeExternalPayment({
+      userId,
+      amount: tariff,
+      currency: verifiedPayment.amount.currency,
+      telegramPaymentChargeId: verifiedPayment.id,
+      providerPaymentChargeId: verifiedPayment.payment_method?.id,
+      invoicePayload: verifiedPayment.description
+    })
   }
 
   public async renewSubscription(client: Client, newExpiredAt: string): Promise<boolean> {
@@ -283,6 +309,61 @@ class PaymentService {
 
     return this.messages.sendSuccessfulPayment(chat, paidUntil)
   }
+
+  private async finalizeExternalPayment(params: FinalizeExternalPaymentParams) {
+    const { userId, amount, currency, telegramPaymentChargeId, invoicePayload, providerPaymentChargeId } = params
+
+    const client = await this.db.getClientWithServerByUserId(userId)
+    if (!client?.server) {
+      throw new Error(`Client not found for user [${userId}]`)
+    }
+
+    const exists = await this.db.hasPayment(telegramPaymentChargeId)
+    if (exists) return
+
+    const months = getTariffMonths(PayMethod.Card, amount)
+    if (months === undefined) {
+      throw new Error(`Error month calculating for tariff: ${amount}`)
+    }
+
+    const newExpiredAt = getNewExpiredAt(client.expired_at, months)
+    const paidUntil = getSubscriptionExpiredDate(newExpiredAt)
+
+    const paymentSaved = await this.db.savePayment({
+      clientId: client.id,
+      amount,
+      currency,
+      months,
+      paidUntil: dbDate(newExpiredAt),
+      invoicePayload,
+      telegramPaymentChargeId,
+      providerPaymentChargeId
+    })
+    if (!paymentSaved) {
+      throw new Error("Payment saving error")
+    }
+
+    const success = await this.renewSubscription(client, dbDate(newExpiredAt))
+    if (!success) {
+      throw new Error("Subscription renew error")
+    }
+
+    const chat = { id: Number(client.chat_id) } as Chat
+    this.messages.sendSuccessfulPayment(chat, paidUntil)
+  }
+
+  private getYooKassaHeaders(idempotenceKey?: string): Record<string, string> {
+    const headers: Record<string, string> = {
+      Authorization: `Basic ${Buffer.from(`${config.yookassaShopId}:${config.yookassaSecretKey}`).toString("base64")}`
+    }
+
+    if (idempotenceKey) {
+      headers["Content-Type"] = "application/json"
+      headers["Idempotence-Key"] = idempotenceKey
+    }
+
+    return headers
+  }
 }
 
 export default PaymentService
@@ -293,6 +374,15 @@ interface FinalizePaymentParams {
   amount: number
   currency: string
   method: PayMethod
+  telegramPaymentChargeId: string
+  invoicePayload?: string
+  providerPaymentChargeId?: string
+}
+
+interface FinalizeExternalPaymentParams {
+  userId: number
+  amount: number
+  currency: string
   telegramPaymentChargeId: string
   invoicePayload?: string
   providerPaymentChargeId?: string
@@ -315,4 +405,10 @@ interface YooKassaPaymentResponse {
     type?: string
   }
   metadata?: Record<string, string>
+}
+
+interface YooKassaWebhookNotification {
+  type: "notification"
+  event: string
+  object: YooKassaPaymentResponse
 }

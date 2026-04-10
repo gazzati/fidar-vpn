@@ -9,6 +9,7 @@ import CallbackHandler from "@root/telegram/handlers/callback-handler"
 import CommandHandler, { COMMANDS } from "@root/telegram/handlers/command-handler"
 import PromoHandler from "@root/telegram/handlers/promo-handler"
 import SystemCommandHandler from "@root/telegram/handlers/system-command-handler"
+import WebhookServer from "@api/webhook"
 
 class Telegram {
   private bot = new TelegramBot(config.telegramToken, { polling: true })
@@ -24,6 +25,7 @@ class Telegram {
   private commands = new CommandHandler(this.messages, this.callbacks)
   private systemCommands = new SystemCommandHandler(this.systemBot)
   private promo = new PromoHandler(this.bot, this.db, this.messages, this.payment, this.waitingPromoIds)
+  private webhook = new WebhookServer(this.payment)
 
   private async isBlocked(userId?: number): Promise<boolean> {
     if (!userId) return false
@@ -65,6 +67,7 @@ class Telegram {
     })
 
     this.systemCommands.process()
+    this.webhook.process()
   }
 }
 

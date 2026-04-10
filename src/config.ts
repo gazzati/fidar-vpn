@@ -19,7 +19,9 @@ const envVarsSchema = Joi.object({
   PROVIDER_TOKEN: Joi.string().allow("").default("").description("Provider token"),
   YOOKASSA_SHOP_ID: Joi.string().allow("").default("").description("YooKassa shop id"),
   YOOKASSA_SECRET_KEY: Joi.string().allow("").default("").description("YooKassa secret key"),
-  YOOKASSA_RETURN_URL: Joi.string().uri().allow("").default("").description("YooKassa return url")
+  YOOKASSA_RETURN_URL: Joi.string().uri().allow("").default("").description("YooKassa return url"),
+  WEBHOOK_PORT: Joi.number().default(3004).description("Webhook HTTP port"),
+  YOOKASSA_WEBHOOK_PATH: Joi.string().default("/webhooks/yookassa").description("YooKassa webhook path")
 })
 
 const { error, value: envVars } = envVarsSchema.validate(process.env, { allowUnknown: true })
@@ -59,6 +61,8 @@ export default {
   yookassaShopId: envVars.YOOKASSA_SHOP_ID,
   yookassaSecretKey: envVars.YOOKASSA_SECRET_KEY,
   yookassaReturnUrl: envVars.YOOKASSA_RETURN_URL,
+  webhookPort: Number(envVars.WEBHOOK_PORT),
+  yookassaWebhookPath: envVars.YOOKASSA_WEBHOOK_PATH,
 
   serversPort: 3003,
 
@@ -81,7 +85,7 @@ export default {
       "🫶 Мы ценим наших клиентов и поэтому рекомендуем сначала воспользоваться бесплатным периодом",
     NEED_PAY_MESSAGE: "💵 Необходимо произвести оплату",
     SUCCESSFUL_PAYMENT_MESSAGE: "👍 Оплата прошла успешно",
-    PAYMENT_LINK_MESSAGE: "🌐 Ссылка на оплату готова. Откройте страницу YooKassa в браузере и после оплаты нажмите кнопку проверки ниже",
+    PAYMENT_LINK_MESSAGE: "🌐 Ссылка на оплату готова. Откройте страницу YooKassa в браузере и завершите оплату",
     PAYMENT_PENDING_MESSAGE: "⏳ Платеж еще не подтвержден. Если вы уже оплатили, подождите несколько секунд и нажмите проверку снова",
     PAYMENT_ALREADY_CONFIRMED_MESSAGE: "👍 Этот платеж уже был подтвержден ранее",
     SUCCESSFUL_PROMO_MESSAGE: "👍 Промокод успешно применен",
@@ -107,8 +111,8 @@ export default {
     main: [{ text: "🔙 Вернуться на главную", callback_data: callbackData.start }],
     trial: [{ text: "🎁 Пробная подписка", callback_data: callbackData.trial }],
     pay: [{ text: "💵 Оплатить", callback_data: callbackData.pay }],
+    payCardLink: [{ text: "🌐 Банковская карта", callback_data: callbackData.payCardLink }],
     payCard: [{ text: "💳 Банковская карта в боте", callback_data: callbackData.payCard }],
-    payCardLink: [{ text: "🌐 Банковская карта в браузере", callback_data: callbackData.payCardLink }],
     payStars: [{ text: "⭐ Telegram Stars", callback_data: callbackData.payStars }],
     promo: [{ text: "🏷️ Ввести промокод", callback_data: callbackData.promo }],
     support: [{ text: "❓ Поддержка", callback_data: callbackData.support }],

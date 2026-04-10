@@ -22,6 +22,14 @@ class DbService {
     return await entities.Client.findOne({ where: { user_id: from.id }, relations: { server: true } })
   }
 
+  public async getClientByUserId(userId: number): Promise<Client | null> {
+    return await entities.Client.findOne({ where: { user_id: userId } })
+  }
+
+  public async getClientWithServerByUserId(userId: number): Promise<Client | null> {
+    return await entities.Client.findOne({ where: { user_id: userId }, relations: { server: true } })
+  }
+
   public async saveClient(from: User, chat: Chat, serverId: number, publicKey: string): Promise<Client> {
     const expiredAt = getTrialExpiredAt()
 

@@ -2,8 +2,8 @@ import TelegramBot from "node-telegram-bot-api"
 
 import config from "@root/config"
 import { tgLogger } from "@root/helpers/logger"
-import { buildCallbackData, CallbackAction } from "@root/telegram/callback-data"
 import { CardTariff, PayMethod, StarsTariff, TariffName } from "@interfaces/pay"
+import { CallbackAction, buildCallbackData } from "@root/telegram/callback-data"
 
 import { Server } from "@database/entities/Server"
 
@@ -46,8 +46,8 @@ class MessageService {
       ])
 
     this.sendMessage(chat, config.phrases.PAY_MESSAGE, [
-      config.inlineKeyboardItem.payCard,
       config.inlineKeyboardItem.payCardLink,
+      config.inlineKeyboardItem.payCard,
       config.inlineKeyboardItem.payStars,
       config.inlineKeyboardItem.subscription
     ])
@@ -92,13 +92,12 @@ class MessageService {
     ])
   }
 
-  public sendExternalPaymentLink(chat: Chat, url: string, paymentId: string, paidUntil: string | null) {
+  public sendExternalPaymentLink(chat: Chat, url: string, paidUntil: string | null) {
     this.sendMessage(
       chat,
       `${config.phrases.PAYMENT_LINK_MESSAGE}\n\nВаша подписка будет продлена до ${paidUntil}`,
       [
         [{ text: "🌐 Перейти к оплате", url }],
-        [{ text: "✅ Проверить оплату", callback_data: buildCallbackData(CallbackAction.CheckPayment, paymentId) }],
         config.inlineKeyboardItem.subscription,
         config.inlineKeyboardItem.main
       ]

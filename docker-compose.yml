@@ -4,6 +4,8 @@ services:
     restart: unless-stopped
     env_file: .env
     command: ["node", "build/index.js"]
+    ports:
+      - "${WEBHOOK_PORT:-3004}:${WEBHOOK_PORT:-3004}"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
