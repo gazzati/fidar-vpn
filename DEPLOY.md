@@ -21,10 +21,10 @@
 Use a dedicated runtime directory on VPS (without app source `git clone`).
 
 Example:
-- `/home/tim/fidar-vpn/docker-compose.yml`
-- `/home/tim/fidar-vpn/.env` (runtime env vars)
-- `/home/tim/fidar-vpn/.env.deploy` (created by deploy)
-- `/home/tim/fidar-vpn/logs/archive` (archived logs before restart)
+- `/home/fidar-vpn/docker-compose.yml`
+- `/home/fidar-vpn/.env` (runtime env vars)
+- `/home/fidar-vpn/.env.deploy` (created by deploy)
+- `/home/fidar-vpn/logs/archive` (archived logs before restart)
 
 Before first deploy, place on VPS:
 - `docker-compose.yml`
@@ -42,13 +42,13 @@ Workflow fails if `.env` or `docker-compose.yml` is missing.
 ## Read Logs
 Current running containers:
 ```bash
-cd /home/tim/fidar-vpn
+cd /home/fidar-vpn
 docker compose logs -f fidar-bot fidar-worker
 ```
 
 Archived logs from previous containers:
 ```bash
-cd /home/tim/fidar-vpn
+cd /home/fidar-vpn
 ls -lah logs/archive
 tail -n 200 logs/archive/fidar-bot_<timestamp>.log
 tail -n 200 logs/archive/fidar-worker_<timestamp>.log
@@ -56,7 +56,7 @@ tail -n 200 logs/archive/fidar-worker_<timestamp>.log
 
 Search in archived logs:
 ```bash
-cd /home/tim/fidar-vpn
+cd /home/fidar-vpn
 rg -n "error|exception|failed" logs/archive
 ```
 
