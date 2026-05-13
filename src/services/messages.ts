@@ -47,7 +47,7 @@ class MessageService {
 
     this.sendMessage(chat, config.phrases.PAY_MESSAGE, [
       config.inlineKeyboardItem.payCard,
-      config.inlineKeyboardItem.payCardBrowser,
+      // config.inlineKeyboardItem.payCardBrowser,
       config.inlineKeyboardItem.payStars,
       config.inlineKeyboardItem.subscription
     ])
