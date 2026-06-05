@@ -102,12 +102,12 @@ class CallbackHandler {
 
     const paidUntil = getSubscriptionExpiredDate(client.expired_at)
     this.messages.sendSubscription(chat, client.server.label, paidUntil, client.active)
-    if (messageId) this.bot.deleteMessage(chat.id, messageId)
+    if (messageId) this.deleteMessage(chat.id, messageId)
   }
 
   private async start(from: User, chat: Chat, messageId: number) {
     await this.messages.sendStart(from, chat)
-    return this.bot.deleteMessage(chat.id, messageId)
+    return this.deleteMessage(chat.id, messageId)
   }
 
   private async trial(from: User, chat: Chat, messageId: number) {
@@ -121,7 +121,7 @@ class CallbackHandler {
       await this.sendFiles(chat.id, from.username || from.id.toString(), server.name, response.conf, response.qr)
 
       this.messages.sendDone(chat)
-      this.bot.deleteMessage(chat.id, messageId)
+      this.deleteMessage(chat.id, messageId)
 
       tgLogger.log(from, `✅ Client created server [${server.name}]`)
 
@@ -139,7 +139,7 @@ class CallbackHandler {
     if (!servers) return this.error(from, chat, "Servers not found")
 
     this.messages.sendLocations(chat, servers)
-    return this.bot.deleteMessage(chat.id, messageId)
+    return this.deleteMessage(chat.id, messageId)
   }
 
   private async changeServer(from: User, chat: Chat, serverName: string, messageId: number) {
@@ -163,7 +163,7 @@ class CallbackHandler {
       await this.sendFiles(chat.id, from.username || from.id.toString(), server.name, response.conf, response.qr)
 
       this.messages.sendDone(chat)
-      this.bot.deleteMessage(chat.id, messageId)
+      this.deleteMessage(chat.id, messageId)
 
       tgLogger.log(from, `✅ Client created server [${serverName}]`)
 
@@ -186,12 +186,16 @@ class CallbackHandler {
     await this.sendFiles(chat.id, from.username || from.id.toString(), client.server.name, response.conf, response.qr)
 
     this.messages.sendDone(chat)
-    this.bot.deleteMessage(chat.id, messageId)
+    this.deleteMessage(chat.id, messageId)
   }
 
   private async sendFiles(chatId: number, userName: string, serverName: string, conf: string, qr: string) {
     await this.bot.sendDocument(chatId, Buffer.from(conf, "base64"), {}, { filename: `fidar${serverName}.conf` })
     await this.bot.sendPhoto(chatId, Buffer.from(qr, "base64"), {}, { filename: `fidar-${userName}-${serverName}` })
+  }
+
+  private deleteMessage(chatId: number, messageId: number) {
+    return this.bot.deleteMessage(chatId, messageId).catch(() => {})
   }
 
   private error(from: User, chat: Chat, message: string) {
